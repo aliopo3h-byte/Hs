@@ -1,0 +1,1159 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d9b27c">
+<meta name="author" content="أبو الحسن عبدالهادي">
+<meta name="description" content="مئة قطرة: ١٠٠ × أستغفر الله. مع كل استغفار تسقط قطرة فتحيا الأرض.">
+<title>مئة قطرة · ١٠٠ × أستغفر الله</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Lora:ital,wght@0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* ألوان */
+  --ink:#3a2418; --ink-soft:#5d4331; --halo:rgba(255,246,228,.6); --sand:#d9b27c;
+  --glass:rgba(255,250,240,.66); --glass-line:rgba(90,60,30,.22);
+  --card:rgba(255,251,242,.95); --card-ink:#3a2418; --card-soft:#6a5140;
+  --water:#3f93d1; --water-hi:#7cc4ee; --gold:#e8a53a; --focus:#1f6fb2; --ink-tool:#3a2418;
+  /* سلّم الخطوط: ١٢ · ١٤ · ١٦ · ٢٠ */
+  --fs-xs:12px; --fs-sm:14px; --fs-md:16px; --fs-lg:20px;
+  --fs-num:clamp(36px,min(11vw,7vh),60px); --fs-display:clamp(44px,min(12.5vw,9.5vh),80px); --fs-title:clamp(40px,min(12vw,10vh),72px);
+  /* سلّم المسافات: ٤ · ٨ · ١٢ · ١٦ · ٢٤ */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px;
+  --sans:'IBM Plex Sans Arabic',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;
+  --quran:'Amiri Quran','Amiri','Noto Naskh Arabic','Traditional Arabic',serif;
+  --hud-w:min(92vw,520px); --bar-w:min(76vw,400px);
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){ --card:rgba(38,28,21,.92); --card-ink:#f7ecd9; --card-soft:#d6c3a8; --glass:rgba(40,30,22,.58); --glass-line:rgba(255,235,205,.24); --ink-tool:#f7ecd9; }
+}
+:root[data-theme="dark"]{ --card:rgba(38,28,21,.92); --card-ink:#f7ecd9; --card-soft:#d6c3a8; --glass:rgba(40,30,22,.58); --glass-line:rgba(255,235,205,.24); --ink-tool:#f7ecd9; }
+/* أثناء العاصفة تصبح السماء داكنة: ننقل الحبر إلى الفاتح */
+body.dim{ --ink:#fbf3e4; --ink-soft:#eadfca; --halo:rgba(26,22,38,.62); }
+html[lang="ar"]{ --serif:'Amiri','Noto Naskh Arabic','Traditional Arabic',serif; }
+html[lang="en"]{ --serif:'Lora',Georgia,'Times New Roman',serif; }
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ height:100%; margin:0; }
+body{ background:var(--sand); color:var(--ink); font-family:var(--sans); font-size:var(--fs-md); line-height:1.6; overflow:hidden; -webkit-tap-highlight-color:transparent; touch-action:manipulation; user-select:none; -webkit-user-select:none; text-rendering:optimizeLegibility; -webkit-font-smoothing:antialiased; font-synthesis:none; transition:color .3s; }
+p,h1,h2{ margin:0; letter-spacing:0; }
+#scene{ position:fixed; inset:0; display:block; width:100%; height:100%; cursor:pointer; }
+button{ font:inherit; color:inherit; cursor:pointer; border:0; background:none; letter-spacing:0; }
+:focus-visible{ outline:3px solid var(--focus); outline-offset:3px; }
+
+/* ---- الأدوات العلوية: صف ثابت لا يدخل في تدفّق النص ---- */
+.tools{ position:fixed; z-index:6; top:calc(env(safe-area-inset-top,0px) + 10px); inset-inline-end:12px; display:flex; gap:var(--s2); }
+.icon{ width:40px; height:40px; border-radius:50%; display:grid; place-items:center; background:var(--glass); border:1px solid var(--glass-line); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:var(--ink-tool); font-size:var(--fs-sm); font-weight:600; line-height:1; transition:transform .15s, background .2s; }
+.icon:active{ transform:scale(.92); }
+.icon svg{ width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.icon[aria-pressed="true"]{ background:var(--water); color:#fff; border-color:transparent; }
+.icon .on{ display:none; } .icon[data-state="on"] .on{ display:block; } .icon[data-state="on"] .off{ display:none; }
+
+/* ---- لوحة العرض: عمود واحد، إيقاع رأسي ثابت ---- */
+.scrim{ position:fixed; inset:0 0 auto 0; height:44%; z-index:1; pointer-events:none; background:linear-gradient(to bottom,rgba(255,246,228,.34),rgba(255,246,228,0)); transition:opacity .8s; }
+body.dim .scrim{ opacity:.25; }
+#hud{ position:fixed; z-index:2; inset:0; pointer-events:none; display:flex; justify-content:center; align-items:flex-start; padding:calc(env(safe-area-inset-top,0px) + 58px) var(--s4) 0; opacity:0; transition:opacity 1s .5s; }
+body.playing #hud{ opacity:1; }
+.hud-main,.hud-final{ width:var(--hud-w); display:flex; flex-direction:column; align-items:center; text-align:center; transition:opacity .9s, transform .9s; }
+.hud-final{ position:absolute; left:0; right:0; margin-inline:auto; top:calc(env(safe-area-inset-top,0px) + 58px); opacity:0; transform:translateY(8px); pointer-events:none; }
+body.done .hud-main{ opacity:0; transform:translateY(-8px); }
+body.done .hud-final{ opacity:1; transform:none; pointer-events:auto; }
+.kicker,.phrase,.meaning,.count,.ms span,.final-title,.final-quote,.final-src,.final-cta,.credit,.i-kicker,.i-title,.i-sub,.i-hint{ text-shadow:0 0 14px var(--halo),0 1px 0 var(--halo); transition:color .3s, text-shadow .3s; }
+.kicker{ font-size:var(--fs-sm); line-height:1.4; font-weight:500; color:var(--ink-soft); margin-bottom:var(--s1); }
+html[lang="en"] .kicker{ letter-spacing:.02em; }
+.phrase{ font-family:'Amiri','Noto Naskh Arabic','Traditional Arabic',serif; font-weight:700; font-size:var(--fs-display); line-height:1.5; color:var(--ink); padding-block:2px; }
+.meaning{ font-family:var(--serif); font-size:clamp(15px,4vw,18px); line-height:1.5; color:var(--ink-soft); margin-bottom:var(--s3); }
+html[lang="en"] .meaning{ font-style:italic; }
+.count{ display:flex; justify-content:center; align-items:baseline; gap:var(--s2); direction:ltr; unicode-bidi:isolate; line-height:1; margin-bottom:var(--s4); font-family:var(--serif); font-variant-numeric:lining-nums tabular-nums; }
+.count b{ font-size:var(--fs-num); font-weight:700; color:var(--ink); display:inline-block; min-width:1.1ch; text-align:end; transition:color .3s; }
+.count span{ font-size:var(--fs-lg); color:var(--ink-soft); }
+
+.bar{ position:relative; width:var(--bar-w); height:9px; margin-bottom:34px; border-radius:99px; background:rgba(255,250,240,.62); border:1px solid rgba(90,60,30,.26); box-shadow:inset 0 1px 2px rgba(60,36,16,.12); transition:background .6s; }
+body.dim .bar{ background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.35); }
+.fill{ position:absolute; inset-block:0; inset-inline-start:0; width:0; border-radius:inherit; background:linear-gradient(90deg,var(--water-hi),var(--water)); transition:width .5s cubic-bezier(.3,.7,.2,1); }
+.ms{ position:absolute; top:50%; width:0; height:0; }
+.ms i{ position:absolute; left:0; top:0; width:13px; height:13px; border-radius:50%; background:#fffaf0; border:1.5px solid rgba(90,60,30,.42); transform:translate(-50%,-50%); transition:background .4s, border-color .4s, transform .4s; }
+.ms.hit i{ background:var(--gold); border-color:#fffaf0; transform:translate(-50%,-50%) scale(1.15); }
+.ms span{ position:absolute; left:0; top:15px; transform:translateX(-50%); white-space:nowrap; font-size:var(--fs-xs); line-height:1.4; color:var(--ink-soft); }
+.ms.hit span{ color:var(--ink); font-weight:600; }
+.ms[data-at="25"]{ inset-inline-start:25%; } .ms[data-at="50"]{ inset-inline-start:50%; } .ms[data-at="75"]{ inset-inline-start:75%; } .ms[data-at="100"]{ inset-inline-start:100%; }
+html[dir="rtl"] .ms[data-at="100"] span{ transform:translateX(-18%); }
+html[dir="ltr"] .ms[data-at="100"] span{ transform:translateX(-82%); }
+
+/* بطاقة الآية: تأخذ مكانها في التدفّق تحت الشريط (لا تطفو فوق التسميات) */
+.card-wrap{ width:100%; display:flex; justify-content:center; }
+.card{ width:min(92vw,440px); padding:var(--s4) var(--s5) var(--s3); border-radius:16px; background:var(--card); color:var(--card-ink); border:1px solid var(--glass-line); box-shadow:0 14px 34px rgba(40,24,10,.22); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); opacity:0; visibility:hidden; transform:translateY(-10px) scale(.97); transition:opacity .5s, transform .6s cubic-bezier(.2,.8,.2,1), visibility 0s .6s; }
+.card.show{ opacity:1; visibility:visible; transform:none; transition-delay:0s; }
+.card .v{ font-family:var(--quran); font-size:clamp(22px,6vw,28px); line-height:2; color:var(--card-ink); }
+.card .t{ font-family:var(--serif); font-size:var(--fs-md); line-height:1.5; color:var(--card-soft); margin-top:var(--s1); }
+html[lang="en"] .card .t{ font-style:italic; }
+.card .r{ font-size:var(--fs-xs); line-height:1.4; color:var(--card-soft); margin-top:var(--s2); }
+
+/* ---- الختام ---- */
+.final-title{ font-family:var(--serif); font-weight:700; font-size:var(--fs-num); line-height:1.4; color:var(--ink); margin-bottom:var(--s2); }
+.final-quote{ font-family:var(--serif); font-size:clamp(19px,5.2vw,24px); line-height:2; max-width:28ch; color:var(--ink); }
+html[lang="en"] .final-quote{ font-style:italic; line-height:1.6; }
+.final-src{ font-size:var(--fs-xs); line-height:1.4; color:var(--ink-soft); margin-top:var(--s2); }
+.final-cta{ font-size:var(--fs-md); font-weight:600; line-height:1.5; color:var(--ink); margin-top:var(--s4); }
+.streak{ margin-top:var(--s3); padding:var(--s1) var(--s4); border-radius:99px; background:var(--glass); border:1px solid var(--glass-line); font-size:var(--fs-sm); line-height:1.6; color:var(--ink-tool); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+.streak:empty{ display:none; }
+
+.credit{ font-size:var(--fs-xs); line-height:1.5; font-weight:500; color:var(--ink-soft); }
+html[lang="en"] .credit{ letter-spacing:.02em; }
+.i-actions .credit{ margin-top:var(--s1); }
+.hud-final .credit{ margin-top:var(--s4); }
+
+/* ---- المقدّمة ---- */
+#intro{ position:fixed; z-index:4; inset:0; display:flex; flex-direction:column; align-items:center; text-align:center; padding:calc(env(safe-area-inset-top,0px) + 64px) var(--s5) calc(env(safe-area-inset-bottom,0px) + 28px); transition:opacity .9s, visibility .9s; }
+body.playing #intro{ opacity:0; visibility:hidden; pointer-events:none; }
+.scrimi{ position:absolute; inset:0 0 auto 0; height:55%; background:linear-gradient(to bottom,rgba(255,246,228,.4),rgba(255,246,228,0)); pointer-events:none; }
+.i-kicker{ position:relative; font-size:var(--fs-sm); line-height:1.4; font-weight:500; color:var(--ink-soft); margin-bottom:var(--s2); }
+html[lang="en"] .i-kicker{ letter-spacing:.02em; }
+.i-title{ position:relative; font-family:var(--serif); font-weight:700; font-size:var(--fs-title); line-height:1.4; color:var(--ink); margin-bottom:var(--s2); }
+.i-sub{ position:relative; font-family:var(--serif); font-size:clamp(18px,5vw,24px); line-height:1.5; color:var(--ink-soft); margin-bottom:var(--s4); }
+html[lang="en"] .i-sub{ font-style:italic; }
+.i-hint{ position:relative; max-width:30ch; font-size:var(--fs-sm); line-height:1.8; color:var(--ink-soft); }
+.i-actions{ margin-top:auto; display:flex; flex-direction:column; align-items:center; gap:var(--s3); position:relative; }
+.btn{ min-height:54px; padding:0 34px; border-radius:99px; background:var(--card); color:var(--card-ink); border:1px solid var(--glass-line); box-shadow:0 10px 28px rgba(40,24,10,.26); font-family:var(--serif); font-weight:700; font-size:22px; line-height:1.2; display:inline-flex; align-items:center; justify-content:center; gap:10px; transition:transform .15s; }
+.btn:active{ transform:scale(.97); }
+.btn.primary{ background:linear-gradient(180deg,#58aee6,#3b8ccb); color:#fff; border-color:transparent; text-shadow:0 1px 1px rgba(20,60,100,.35); }
+.btn.quiet{ min-height:44px; padding:0 22px; box-shadow:none; background:var(--glass); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); color:var(--ink-tool); font-family:var(--sans); font-weight:500; font-size:var(--fs-md); }
+.btn svg{ width:20px; height:20px; fill:currentColor; flex:none; }
+
+/* ---- الأسفل ---- */
+.dock{ position:fixed; z-index:3; left:0; right:0; bottom:calc(env(safe-area-inset-bottom,0px) + 22px); display:flex; flex-direction:column; align-items:center; gap:var(--s3); pointer-events:none; opacity:0; transform:translateY(10px); transition:opacity .8s 1s, transform .8s 1s; }
+body.playing .dock{ opacity:1; transform:none; }
+body.done .dock .tap,body.done .dock .tip{ display:none; }
+.dock>*{ pointer-events:auto; }
+.tip{ padding:var(--s1) var(--s3); border-radius:99px; background:rgba(40,28,18,.42); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); font-size:var(--fs-xs); line-height:1.6; color:#fff; transition:opacity .8s; pointer-events:none !important; }
+body.warm .tip{ opacity:0; }
+.tap{ position:relative; min-width:168px; }
+.tap::after{ content:""; position:absolute; inset:0; border-radius:inherit; border:2px solid rgba(255,255,255,.85); opacity:0; pointer-events:none; }
+.tap.ping::after{ animation:ping .6s ease-out; }
+@keyframes ping{ from{ opacity:.9; transform:scale(1); } to{ opacity:0; transform:scale(1.35); } }
+.done-actions{ display:none; gap:var(--s3); }
+body.done .done-actions{ display:flex; }
+.toast{ position:fixed; z-index:9; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 100px); transform:translate(-50%,10px); padding:var(--s2) var(--s4); border-radius:99px; background:var(--card); color:var(--card-ink); font-size:var(--fs-sm); line-height:1.5; opacity:0; transition:opacity .3s, transform .3s; pointer-events:none; box-shadow:0 8px 20px rgba(0,0,0,.2); }
+.toast.show{ opacity:1; transform:translate(-50%,0); }
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+/* ---- شاشات قصيرة (أفقي) ---- */
+@media (max-height:560px){
+  #hud{ padding-top:calc(env(safe-area-inset-top,0px) + 12px); }
+  .hud-final{ top:calc(env(safe-area-inset-top,0px) + 12px); }
+  .phrase{ font-size:clamp(34px,9vh,52px); line-height:1.45; } .count{ margin-bottom:var(--s2); } .count b{ font-size:34px; } .count span{ font-size:var(--fs-md); }
+  .meaning{ display:none; } .bar{ margin-bottom:30px; }
+  #intro{ padding-top:calc(env(safe-area-inset-top,0px) + 24px); } .i-hint{ display:none; }
+  .btn{ min-height:46px; font-size:19px; } .tip{ display:none; }
+  .final-quote{ line-height:1.7; }
+}
+@media (prefers-reduced-motion:reduce){ *{ transition-duration:.01ms !important; animation-duration:.01ms !important; } }
+</style>
+</head>
+<body>
+<canvas id="scene" aria-label="مشهد يتحوّل من أرض يابسة إلى جنّة مع كل استغفار" role="img"></canvas>
+<div class="scrim"></div>
+
+<div class="tools">
+  <button class="icon" id="bLang" type="button" aria-label="Language"><span id="bLangT">EN</span></button>
+  <button class="icon" id="bSound" type="button" data-state="on" aria-label="الصوت" aria-pressed="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z"/><path class="on" d="M15.5 9a4 4 0 010 6M18 6.5a8 8 0 010 11"/><path class="off" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+  </button>
+  <button class="icon" id="bAuto" type="button" aria-label="تشغيل تلقائي" aria-pressed="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path id="autoIcon" d="M8 5.5v13l10-6.5z"/></svg>
+  </button>
+</div>
+
+<div id="hud">
+  <div class="hud-main">
+    <p class="kicker" data-i="kicker"></p>
+    <h1 class="phrase" lang="ar" dir="rtl">أَسْتَغْفِرُ اللَّهَ</h1>
+    <p class="meaning" data-i="meaning"></p>
+    <div class="count" aria-hidden="true"><b id="n">0</b><span id="of">/ 100</span></div>
+    <div class="bar" id="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="fill" id="fill"></div>
+      <div class="ms" data-at="25"><i></i><span data-i="m_rain"></span></div>
+      <div class="ms" data-at="50"><i></i><span data-i="m_gardens"></span></div>
+      <div class="ms" data-at="75"><i></i><span data-i="m_rivers"></span></div>
+      <div class="ms" data-at="100"><i></i><span data-i="m_forgiveness"></span></div>
+    </div>
+    <div class="card-wrap"><div class="card" id="card"><p class="v" id="cV" lang="ar" dir="rtl"></p><p class="t" id="cT"></p><p class="r" id="cR"></p></div></div>
+  </div>
+  <div class="hud-final">
+    <h2 class="final-title" data-i="doneTitle"></h2>
+    <p class="final-quote" data-i="doneQuote"></p>
+    <p class="final-src" data-i="doneSrc"></p>
+    <p class="final-cta" data-i="doneCta"></p>
+    <span class="streak" id="streak"></span>
+    <p class="credit" data-i="credit"></p>
+  </div>
+</div>
+
+<div id="intro">
+  <div class="scrimi"></div>
+  <p class="i-kicker" data-i="iKicker"></p>
+  <h2 class="i-title" data-i="iTitle"></h2>
+  <p class="i-sub" data-i="iSub"></p>
+  <p class="i-hint" data-i="iHint"></p>
+  <div class="i-actions">
+    <button class="btn primary" id="bStart" type="button"></button>
+    <button class="btn quiet" id="bWatch" type="button" data-i="watch"></button>
+    <p class="credit" data-i="credit"></p>
+  </div>
+</div>
+
+<div class="dock">
+  <p class="tip" data-i="tip"></p>
+  <button class="btn tap" id="bTap" type="button">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3.6 4.6 6 7.8 6 11.2a6 6 0 01-12 0c0-3.4 2.4-6.6 6-11.2z"/></svg>
+    <span data-i="tap"></span>
+  </button>
+  <div class="done-actions">
+    <button class="btn primary" id="bAgain" type="button" data-i="again"></button>
+    <button class="btn" id="bShare" type="button" data-i="share"></button>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<div class="sr" id="live" aria-live="polite"></div>
+<noscript><p style="position:fixed;inset:40% 10% auto;text-align:center">يحتاج هذا الموقع إلى JavaScript.</p></noscript>
+
+<script>
+/* ============================================================
+   Scene v2 — مشهد عالي الجودة: من أرض قاحلة إلى جنّة
+   مدخلاته: c (العدّاد المُنعَّم)، t (الزمن)، cam (0..1)، px/py (إزاحة المنظور)
+   ويراعي مكان النصوص (hudBottom) فلا تتداخل معها العناصر الرئيسية
+   ============================================================ */
+const Scene = (function () {
+  'use strict';
+  const TAU = Math.PI * 2;
+  const clamp = (x, a = 0, b = 1) => (x < a ? a : x > b ? b : x);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+  const frac = (x) => x - Math.floor(x);
+  const hex = (h) => { h = h.replace('#', ''); return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; };
+  const mixc = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+  const rgb = (c, a) => (a === undefined || a >= 1 ? `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})` : `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`);
+  const mulberry = (seed) => () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  const easeOutBack = (t) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+  const easeInOut = (t) => t * t * (3 - 2 * t);
+
+  const K = {
+    skyTopDry: hex('#c4a089'), skyMidDry: hex('#e0bd94'), skyHorDry: hex('#f3d7a2'),
+    skyTopLush: hex('#5f95d6'), skyMidLush: hex('#92bde4'), skyHorLush: hex('#dcecf4'),
+    skyTopStorm: hex('#625e70'), skyMidStorm: hex('#837e8b'), skyHorStorm: hex('#a9a3aa'),
+    mtFarDry: hex('#c9a590'), mtNearDry: hex('#b08670'), mtFrontDry: hex('#94705a'),
+    mtFarLush: hex('#93a6d6'), mtNearLush: hex('#6f88bb'), mtFrontLush: hex('#52709f'),
+    mtStorm: hex('#8b8793'),
+    stoneA: ['#cdbfa9', '#ddd2bd', '#b3a591', '#e4dac6', '#bfb09b'],
+    stoneB: ['#a39481', '#b9ad98', '#8c7f6d', '#c2b8a3', '#9b8d79'],
+    petal: ['#ffffff', '#f7c948', '#f28c3d', '#ee7b93', '#a98fd9', '#fbe6ef', '#ffd2a3'],
+  };
+
+  let makeCanvas = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+  let W = 0, H = 0, DPR = 1, S = 0, U = 1, hy = 0, hb = 0, wx = 0, wyF = 0, wyS = 0, wRx = 0, wRy = 0, landscape = false;
+  let dryLayer = null, lushLayer = null, grainCv = null;
+  let mtL = [], trees = [], flowers = [], tufts = [], blades = [], pebbles = [], stones = [], clouds = [], birds = [], flies = [], motes = [];
+  let cloudBand = { top: 0, bot: 0 };
+  let drops = [], ripples = [], splashes = [];
+
+  function init(opts) { if (opts && opts.makeCanvas) makeCanvas = opts.makeCanvas; }
+  const layerCanvas = () => { const cv = makeCanvas(Math.ceil(W * DPR), Math.ceil(H * DPR)); const g = cv.getContext('2d'); g.scale(DPR, DPR); return [cv, g]; };
+
+  /* ---------------- التخطيط والبناء ---------------- */
+  function resize(w, h, ratio, opts) {
+    W = w; H = h; DPR = ratio || 1; landscape = W > H * 1.15;
+    S = Math.min(W, H * (landscape ? 0.82 : 0.78)); U = S / 400;
+    hb = opts && opts.hudBottom > 0 ? opts.hudBottom : H * 0.30;
+    const hyBase = H * (landscape ? 0.47 : 0.435);
+    hy = clamp(Math.max(hyBase, hb + H * 0.085), hyBase, H * (landscape ? 0.58 : 0.56));
+    wx = W * 0.5;
+    wyF = hy + (H - hy) * (landscape ? 0.38 : 0.31);
+    wyS = hy + (H - hy) * (landscape ? 0.70 : 0.62);
+    wRx = S * 0.215; wRy = wRx * 0.37;
+    buildGrain(); buildMountains(); buildStones(); buildDry(); buildLush();
+    buildTrees(); buildFlowers(); buildTufts(); buildSky();
+  }
+  function getHy() { return hy; }
+
+  function buildGrain() {
+    const n = 128, cv = makeCanvas(n, n), g = cv.getContext('2d'), id = g.createImageData(n, n), r = mulberry(5);
+    for (let i = 0; i < n * n; i++) { const v = 100 + ((r() * 56) | 0); id.data[i * 4] = v; id.data[i * 4 + 1] = v; id.data[i * 4 + 2] = v; id.data[i * 4 + 3] = 255; }
+    g.putImageData(id, 0, 0); grainCv = cv;
+  }
+
+  function buildMountains() {
+    const r = mulberry(11), ml = landscape ? 1.45 : 1;
+    const mk = (amp, base, ph0, rid) => {
+      const ph = [r() * 10 + ph0, r() * 10, r() * 10, r() * 10], pts = [];
+      for (let x = -50; x <= W + 50; x += 5) {
+        const u = x / W;
+        const sm = (0.50 * Math.sin(u * 3.1 + ph[0]) + 0.30 * Math.sin(u * 7.3 + ph[1]) + 0.20 * Math.sin(u * 15.7 + ph[2]) + 1) / 2;
+        const rg = 1 - Math.abs(Math.sin(u * (4.4 + rid) + ph[3]));
+        pts.push([x, hy - base - Math.pow(0.62 * sm + 0.38 * rg, 1.25) * amp]);
+      }
+      return pts;
+    };
+    mtL = [
+      { pts: mk(H * 0.085 * ml, H * 0.014, 0, 0.0), haze: 0.22, par: 5 },
+      { pts: mk(H * 0.058 * ml, H * 0.006, 4.2, 1.6), haze: 0.10, par: 8 },
+      { pts: mk(H * 0.032 * ml, 0, 8.1, 3.1), haze: 0.0, par: 12 },
+    ];
+  }
+
+  function buildStones() {
+    const r = mulberry(23); stones = [];
+    const N = 40;
+    for (let i = 0; i < N; i++) {
+      const a = (i / N) * TAU + (r() - 0.5) * 0.07;
+      stones.push({ a, len: 0.072 + r() * 0.05, th: 0.085 + r() * 0.045, ci: (r() * 5) | 0, off: 0.90 + r() * 0.05, rot: (r() - 0.5) * 0.4 });
+    }
+  }
+
+  function buildDry() {
+    const [cv, g] = layerCanvas(); const r = mulberry(101);
+    const gr = g.createLinearGradient(0, hy, 0, H);
+    gr.addColorStop(0, '#e8c990'); gr.addColorStop(0.3, '#dcb47b'); gr.addColorStop(1, '#b48252');
+    g.fillStyle = gr; g.fillRect(0, hy - 2, W, H - hy + 2);
+    for (let i = 0; i < 46; i++) {
+      const x = r() * W, y = hy + r() * (H - hy), rad = (0.08 + 0.18 * r()) * Math.max(W, H * 0.6), dark = r() < 0.5;
+      const p = g.createRadialGradient(x, y, 0, x, y, rad);
+      p.addColorStop(0, dark ? 'rgba(120,78,38,0.07)' : 'rgba(255,238,196,0.11)'); p.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = p; g.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+    }
+    const lg = g.createLinearGradient(0, 0, W, 0); lg.addColorStop(0, 'rgba(70,40,14,0.10)'); lg.addColorStop(1, 'rgba(255,232,176,0.10)');
+    g.fillStyle = lg; g.fillRect(0, hy, W, H - hy);
+    const n = Math.min(1100, Math.round(W * H / 750));
+    for (let i = 0; i < n; i++) {
+      const y = hy + Math.pow(r(), 0.8) * (H - hy), ps = (y - hy) / (H - hy);
+      g.fillStyle = r() < 0.5 ? 'rgba(110,72,38,0.16)' : 'rgba(255,236,192,0.18)';
+      g.fillRect(r() * W, y, 1 + ps * 2, 1 + ps * 0.8);
+    }
+    // تشقّقات ثنائية اللون (ظل + ضوء) لإحساس بالعمق
+    const lines = [];
+    const trace = (x, y, len, ang, depth, ps) => {
+      const segs = 4 + ((r() * 3) | 0), pts = [[x, y]], br = []; let cx = x, cy = y;
+      for (let s = 0; s < segs; s++) {
+        ang += (r() - 0.5) * 0.55; cx += Math.cos(ang) * len / segs; cy += Math.sin(ang) * len / segs * 0.55; pts.push([cx, cy]);
+        if (depth > 0 && r() < 0.4) br.push([cx, cy, len * (0.35 + r() * 0.25), ang + (r() < 0.5 ? -1 : 1) * (0.6 + r() * 0.7)]);
+      }
+      lines.push({ pts, ps }); br.forEach((b) => trace(b[0], b[1], b[2], b[3], depth - 1, ps));
+    };
+    const nC = Math.round(34 + W * H / 14000);
+    for (let i = 0; i < nC; i++) {
+      const ps = Math.pow(r(), 0.65), y = hy + 8 + ps * (H - hy - 8), x = r() * W, len = S * (0.03 + 0.2 * ps) * (0.5 + r());
+      trace(x, y, len, r() < 0.72 ? (r() - 0.5) : (r() < 0.5 ? 1.25 : -1.25) + (r() - 0.5) * 0.5, 1, ps);
+    }
+    g.lineJoin = 'round'; g.lineCap = 'round';
+    [[1, 'light'], [0, 'dark']].forEach(([off, kind]) => {
+      lines.forEach((L) => {
+        g.beginPath(); L.pts.forEach((p, i) => (i ? g.lineTo(p[0] + off * 0.9, p[1] + off * 0.9) : g.moveTo(p[0] + off * 0.9, p[1] + off * 0.9)));
+        g.lineWidth = 0.4 + L.ps * 1.0; g.strokeStyle = kind === 'light' ? `rgba(255,236,190,${0.18 + 0.2 * L.ps})` : `rgba(104,66,34,${0.18 + 0.26 * L.ps})`; g.stroke();
+      });
+    });
+    // حصى
+    for (let i = 0; i < 44; i++) {
+      const ps = Math.pow(r(), 0.7), y = hy + 10 + ps * (H - hy - 14), x = r() * W, sz = S * (0.004 + 0.012 * ps) * (0.6 + r());
+      g.fillStyle = 'rgba(50,30,12,0.28)'; g.beginPath(); g.ellipse(x - sz * 0.25, y + sz * 0.4, sz * 1.1, sz * 0.4, 0, 0, TAU); g.fill();
+      g.fillStyle = rgb(mixc(hex('#c2ae92'), hex('#8e7b66'), r())); g.beginPath(); g.ellipse(x, y, sz, sz * 0.62, 0, 0, TAU); g.fill();
+      g.fillStyle = 'rgba(255,245,225,0.38)'; g.beginPath(); g.ellipse(x + sz * 0.22, y - sz * 0.2, sz * 0.45, sz * 0.22, 0, 0, TAU); g.fill();
+    }
+    // أعشاب يابسة
+    g.lineCap = 'round';
+    for (let i = 0; i < 42; i++) {
+      const ps = Math.pow(r(), 0.7), y = hy + 12 + ps * (H - hy - 16), x = r() * W, len = S * (0.016 + 0.034 * ps);
+      g.strokeStyle = r() < 0.5 ? 'rgba(168,132,76,0.85)' : 'rgba(196,160,100,0.85)'; g.lineWidth = 0.6 + ps * 0.9;
+      g.beginPath(); for (let k = 0; k < 6; k++) { const a = -Math.PI / 2 + (k - 2.5) * 0.28 + (r() - 0.5) * 0.2; g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a) * len * 0.5, y + Math.sin(a) * len * 0.6, x + Math.cos(a) * len, y + Math.sin(a) * len); } g.stroke();
+    }
+    dryLayer = cv;
+  }
+
+  function buildLush() {
+    const [cv, g] = layerCanvas(); const r = mulberry(202);
+    const gr = g.createLinearGradient(0, hy, 0, H);
+    gr.addColorStop(0, '#5a8f3f'); gr.addColorStop(0.35, '#7fb24b'); gr.addColorStop(1, '#659838');
+    g.fillStyle = gr; g.fillRect(0, hy - 2, W, H - hy + 2);
+    for (let i = 0; i < 54; i++) {
+      const x = r() * W, y = hy + r() * (H - hy), rad = (0.07 + 0.17 * r()) * Math.max(W, H * 0.6), dark = r() < 0.45;
+      const p = g.createRadialGradient(x, y, 0, x, y, rad);
+      p.addColorStop(0, dark ? 'rgba(28,82,40,0.15)' : 'rgba(214,234,128,0.20)'); p.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = p; g.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+    }
+    const lg = g.createLinearGradient(0, 0, W, 0); lg.addColorStop(0, 'rgba(10,50,30,0.12)'); lg.addColorStop(1, 'rgba(255,240,170,0.13)');
+    g.fillStyle = lg; g.fillRect(0, hy, W, H - hy);
+    const layers = [
+      { n: Math.min(4200, Math.round(W * H / 260)), len: [3, 10], w: [0.5, 1.0], cols: ['#2f6a2a', '#3f7a2c', '#4c8a32'], a: 0.5 },
+      { n: Math.min(2400, Math.round(W * H / 460)), len: [6, 16], w: [0.7, 1.4], cols: ['#5b9a37', '#6caa40', '#7db84a'], a: 0.6 },
+      { n: Math.min(1100, Math.round(W * H / 1000)), len: [9, 22], w: [0.9, 1.7], cols: ['#9bc95a', '#b6d977', '#c8e48a'], a: 0.7 },
+    ];
+    g.lineCap = 'round';
+    layers.forEach((L) => {
+      L.cols.forEach((col) => {
+        g.strokeStyle = col; g.globalAlpha = L.a; g.lineWidth = lerp(L.w[0], L.w[1], 0.5); g.beginPath();
+        for (let i = 0; i < L.n / L.cols.length; i++) {
+          const y = hy + 4 + Math.pow(r(), 0.85) * (H - hy - 4), ps = (y - hy) / (H - hy), len = lerp(L.len[0], L.len[1], ps) * (0.6 + r() * 0.8), x = r() * W, lean = (r() - 0.5) * len * 0.5;
+          g.moveTo(x, y); g.quadraticCurveTo(x + lean * 0.3, y - len * 0.6, x + lean, y - len);
+        }
+        g.stroke();
+      });
+    });
+    g.globalAlpha = 1;
+    for (let i = 0; i < 160; i++) {
+      const y = hy + 6 + Math.pow(r(), 0.8) * (H - hy - 6), ps = (y - hy) / (H - hy), x = r() * W, s = (0.8 + ps * 1.6) * (0.7 + r() * 0.6);
+      g.fillStyle = r() < 0.5 ? 'rgba(236,250,170,0.5)' : 'rgba(30,70,30,0.35)'; g.beginPath(); g.ellipse(x, y, s * 1.6, s * 0.9, 0, 0, TAU); g.fill();
+    }
+    const hz = g.createLinearGradient(0, hy, 0, hy + (H - hy) * 0.22); hz.addColorStop(0, 'rgba(196,222,232,0.42)'); hz.addColorStop(1, 'rgba(196,222,232,0)');
+    g.fillStyle = hz; g.fillRect(0, hy, W, (H - hy) * 0.22);
+    lushLayer = cv;
+  }
+
+  /* ---------------- الأشجار ---------------- */
+  function buildTrees() {
+    const r = mulberry(7); trees = [];
+    const specs = [
+      [0.27, 0.030, 0.085, 0, 1, 0.05], [0.74, 0.034, 0.075, 0, 3, -0.04], [0.09, 0.040, 0.100, 0, 0, 0.06], [0.90, 0.042, 0.105, 0, 2, -0.05],
+      [0.14, 0.100, 0.150, 1, 2, 0.03], [0.86, 0.095, 0.145, 1, 4, -0.03],
+      [0.015, 0.150, 0.250, 2, 0, 0.10], [0.99, 0.135, 0.230, 2, 1, -0.10],
+    ];
+    specs.forEach((s) => {
+      const h = s[2] * H, base = hy + s[1] * H, lean = s[5];
+      const tr = { x: s[0] * W, base, h, depth: s[3], delay: s[4], lean, phase: r() * 6, segs: [], puffs: [], dots: [] };
+      const grow = (x, y, ang, len, w, d, lvl) => {
+        const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len; tr.segs.push([x, y, x2, y2, w, lvl]);
+        if (d > 0) {
+          const n = d > 2 ? 2 : (r() < 0.25 ? 3 : 2);
+          for (let k = 0; k < n; k++) { const side = n === 2 ? (k ? 1 : -1) : k - 1; grow(x2, y2, ang + side * (0.38 + r() * 0.5) + (r() - 0.5) * 0.15, len * (0.66 + r() * 0.08), w * 0.62, d - 1, lvl + 1); }
+          if (d > 1 && r() < 0.45) grow(x + (x2 - x) * 0.55, y + (y2 - y) * 0.55, ang + (r() < 0.5 ? -1 : 1) * (0.9 + r() * 0.4), len * 0.5, w * 0.5, d - 2, lvl + 1);
+        }
+      };
+      const ta = -Math.PI / 2 + lean * 1.4;
+      grow(0, 0, ta, h * 0.30, h * 0.052, 3, 0);
+      const tx = Math.cos(ta) * h * 0.30, ty = Math.sin(ta) * h * 0.30; tr.top = [tx, ty];
+      for (let i = 0; i < 24; i++) {
+        const a = r() * TAU, d = Math.sqrt(r()), big = i < 4;
+        tr.puffs.push([tx + Math.cos(a) * d * h * 0.36 * (big ? 0.35 : 1), ty - h * 0.22 + Math.sin(a) * d * h * 0.24 * (big ? 0.5 : 1), h * (big ? 0.15 + r() * 0.04 : 0.085 + r() * 0.075)]);
+      }
+      tr.puffs.sort((p, q) => q[1] - p[1]);
+      for (let i = 0; i < 28; i++) { const p = tr.puffs[(r() * tr.puffs.length) | 0], a = r() * TAU, d = Math.sqrt(r()) * 0.85; tr.dots.push([p[0] + Math.cos(a) * d * p[2], p[1] + Math.sin(a) * d * p[2], r()]); }
+      trees.push(tr);
+    });
+  }
+
+  function drawTree(ctx, tr, c, t, gSky) {
+    const leaf0 = smooth(32 + tr.delay, 45 + tr.delay, c), leaf = leaf0 > 0 ? clamp(easeOutBack(leaf0), 0, 1.06) : 0;
+    const h = tr.h, bx = tr.x, by = tr.base;
+    const haze = tr.depth === 0 ? 0.20 : tr.depth === 1 ? 0.08 : 0;
+    // ظل على الأرض (الشمس من اليمين)
+    const sr = h * (0.30 + 0.16 * Math.min(1, leaf));
+    ctx.save(); ctx.translate(bx - h * 0.10, by); ctx.scale(1, 0.2);
+    const sg = ctx.createRadialGradient(0, 0, 0, 0, 0, sr); sg.addColorStop(0, 'rgba(34,24,8,0.32)'); sg.addColorStop(1, 'rgba(34,24,8,0)');
+    ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(0, 0, sr, 0, TAU); ctx.fill(); ctx.restore();
+
+    ctx.save(); ctx.translate(bx, by); ctx.lineCap = 'round';
+    const wood = mixc(hex('#68412a'), hex('#7d6f78'), haze), woodHi = mixc(hex('#9a6a42'), hex('#a398a4'), haze), woodLo = mixc(hex('#4a2d1a'), hex('#625a66'), haze);
+    const hideFine = leaf0 > 0.5, segs = tr.segs;
+    // الجذع: شكل مخروطي مع تدرّج
+    const s0 = segs[0], dx = s0[2] - s0[0], dy = s0[3] - s0[1], m = Math.hypot(dx, dy) || 1, nx = -dy / m, ny = dx / m, w1 = s0[4], w2 = s0[4] * 0.62;
+    const tg = ctx.createLinearGradient(-w1, 0, w1, 0); tg.addColorStop(0, rgb(woodLo)); tg.addColorStop(0.55, rgb(wood)); tg.addColorStop(1, rgb(woodHi));
+    ctx.fillStyle = tg; ctx.beginPath(); ctx.moveTo(s0[0] + nx * w1 * 0.62, s0[1] + ny * w1 * 0.62); ctx.lineTo(s0[2] + nx * w2 * 0.5, s0[3] + ny * w2 * 0.5); ctx.lineTo(s0[2] - nx * w2 * 0.5, s0[3] - ny * w2 * 0.5); ctx.lineTo(s0[0] - nx * w1 * 0.62, s0[1] - ny * w1 * 0.62); ctx.closePath(); ctx.fill();
+    // جذر عريض
+    ctx.beginPath(); ctx.ellipse(0, 0, w1 * 0.78, w1 * 0.26, 0, 0, TAU); ctx.fillStyle = rgb(woodLo); ctx.fill();
+    ctx.strokeStyle = rgb(wood);
+    for (let i = 1; i < segs.length; i++) {
+      const s = segs[i]; if (hideFine && s[5] > 1) continue;
+      ctx.lineWidth = Math.max(0.8, s[4]); ctx.beginPath(); ctx.moveTo(s[0], s[1]); ctx.lineTo(s[2], s[3]); ctx.stroke();
+    }
+    ctx.strokeStyle = rgb(woodHi); ctx.globalAlpha = 0.45;
+    for (let i = 1; i < segs.length; i++) { const s = segs[i]; if ((hideFine && s[5] > 1) || s[4] < 1.6) continue; ctx.lineWidth = Math.max(0.5, s[4] * 0.3); ctx.beginPath(); ctx.moveTo(s[0] + s[4] * 0.2, s[1]); ctx.lineTo(s[2] + s[4] * 0.2, s[3]); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+
+    if (leaf > 0.01) {
+      const sway = Math.sin(t * 0.8 + tr.phase) * h * 0.006, P = tr.puffs, L = leaf;
+      const cShade = mixc(hex('#2c6a34'), hex('#5f8f7a'), haze), cBase = mixc(hex('#4f9a35'), hex('#7aa890'), haze), cLight = mixc(hex('#7dbb45'), hex('#a0c8a0'), haze), cHi = mixc(hex('#b4de62'), hex('#c4dcb0'), haze);
+      ctx.translate(sway, 0);
+      // ظل تحت التاج
+      const ug = ctx.createRadialGradient(tr.top[0], tr.top[1], 0, tr.top[0], tr.top[1], h * 0.34 * L);
+      ug.addColorStop(0, 'rgba(18,40,22,0.40)'); ug.addColorStop(1, 'rgba(18,40,22,0)'); ctx.fillStyle = ug; ctx.beginPath(); ctx.ellipse(tr.top[0], tr.top[1] + h * 0.02, h * 0.34 * L, h * 0.16 * L, 0, 0, TAU); ctx.fill();
+      const pass = (col, ox, oy, rs, a) => {
+        ctx.fillStyle = rgb(col); ctx.globalAlpha = a; ctx.beginPath();
+        for (let i = 0; i < P.length; i++) { const p = P[i], rr = p[2] * rs * L, x = p[0] + p[2] * ox * L, y = p[1] + p[2] * oy * L; ctx.moveTo(x + rr, y); ctx.arc(x, y, rr, 0, TAU); }
+        ctx.fill(); ctx.globalAlpha = 1;
+      };
+      pass(cShade, -0.05, 0.12, 1.02, 1); pass(cBase, 0, 0, 0.92, 1); pass(cLight, 0.14, -0.20, 0.64, 0.95); pass(cHi, 0.26, -0.34, 0.30, 0.8);
+      if (h > H * 0.1) {
+        // أوراق صغيرة على الحواف المضيئة
+        ctx.fillStyle = rgb(cHi); ctx.globalAlpha = 0.8; ctx.beginPath();
+        for (let i = 0; i < P.length; i++) { const p = P[i]; for (let k = 0; k < 3; k++) { const a = -1.1 + k * 0.55 + (i % 3) * 0.12, x = p[0] + Math.cos(a) * p[2] * 0.94 * L, y = p[1] + Math.sin(a) * p[2] * 0.94 * L, rr = Math.max(0.9, p[2] * 0.11 * L); ctx.moveTo(x + rr, y); ctx.arc(x, y, rr, 0, TAU); } }
+        ctx.fill(); ctx.globalAlpha = 1;
+        const bl = smooth(56, 66, c) * (1 - smooth(68, 77, c)), fr = smooth(70, 80, c), dr = Math.max(1.3, h * 0.012);
+        if (bl > 0.02) {
+          ctx.globalAlpha = bl; ctx.fillStyle = '#fffaf2'; ctx.beginPath();
+          tr.dots.forEach((d) => { const rr = dr * (0.7 + d[2] * 0.6); ctx.moveTo(d[0] + rr, d[1]); ctx.arc(d[0], d[1], rr, 0, TAU); }); ctx.fill();
+          ctx.fillStyle = 'rgba(255,196,214,0.8)'; ctx.beginPath(); tr.dots.forEach((d, i) => { if (i % 4) return; ctx.moveTo(d[0] + dr * 0.5, d[1] + dr * 0.3); ctx.arc(d[0], d[1] + dr * 0.3, dr * 0.5, 0, TAU); }); ctx.fill(); ctx.globalAlpha = 1;
+        }
+        if (fr > 0.02) {
+          ctx.globalAlpha = fr; ctx.fillStyle = '#7e1f18'; ctx.beginPath(); tr.dots.forEach((d, i) => { if (i % 3 === 2) return; ctx.moveTo(d[0] + dr * 1.45, d[1] + dr * 0.25); ctx.arc(d[0], d[1] + dr * 0.25, dr * 1.45, 0, TAU); }); ctx.fill();
+          ctx.fillStyle = '#e04431'; ctx.beginPath(); tr.dots.forEach((d, i) => { if (i % 3 === 2) return; ctx.moveTo(d[0] + dr * 1.25, d[1]); ctx.arc(d[0], d[1], dr * 1.25, 0, TAU); }); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.beginPath(); tr.dots.forEach((d, i) => { if (i % 3 === 2) return; ctx.moveTo(d[0] - dr * 0.3 + dr * 0.32, d[1] - dr * 0.42); ctx.arc(d[0] - dr * 0.3, d[1] - dr * 0.42, dr * 0.32, 0, TAU); }); ctx.fill(); ctx.globalAlpha = 1;
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  /* ---------------- الأزهار والعشب ---------------- */
+  function buildFlowers() {
+    const r = mulberry(333); flowers = [];
+    const N = clamp(Math.round(W * H / 2600), 130, 380);
+    for (let i = 0; i < N * 2 && flowers.length < N; i++) {
+      const ps0 = Math.pow(r(), 0.78), y = hy + 12 + ps0 * (H - hy - 16), ps = (y - hy) / (H - hy), x = r() * W;
+      const dx = (x - wx) / (wRx * 1.18), dy = (y - wyF) / (wRy * 1.35); if (dx * dx + dy * dy < 1) continue;
+      const sm = streamAt(y, wyF); if (sm && Math.abs(x - sm.x) < sm.w * 0.66) continue;
+      const dist = clamp(Math.hypot((x - wx) / (W * 0.75), (y - wyF) / (H * 0.5)), 0, 1.25) / 1.25;
+      const ci = (r() * K.petal.length) | 0;
+      flowers.push({ x, y, ps, thr: 34 + 58 * (0.42 * r() + 0.58 * dist), col: K.petal[ci], center: ci === 0 || ci === 5 ? '#f0b02a' : '#fff0ae', size: S * (0.0075 + 0.0135 * ps) * (0.8 + r() * 0.5), rot: r() * TAU, n: r() < 0.55 ? 5 : 6, long: r() < 0.3, stem: 1.2 + r() * 0.8 });
+    }
+    flowers.sort((a, b) => a.y - b.y);
+  }
+
+  function buildTufts() {
+    const r = mulberry(404); tufts = []; blades = []; pebbles = [];
+    const n = clamp(Math.round(W / 22), 16, 52);
+    for (let i = 0; i < n; i++) tufts.push({ x: (i + r() * 0.9) / n * W, h: H * (0.032 + r() * 0.06), n: 6 + ((r() * 4) | 0), ph: r() * 6, gap: r() < 0.22, front: r() < 0.5, seed: r() < 0.3 });
+    for (let i = 0; i < 110; i++) blades.push({ t: 0.03 + r() * 0.97, side: r() < 0.5 ? -1 : 1, h: S * (0.022 + r() * 0.04), ph: r() * 6, n: 3 + ((r() * 3) | 0), cat: r() < 0.14, off: 0.52 + r() * 0.12 });
+    for (let i = 0; i < 46; i++) pebbles.push({ t: 0.04 + r() * 0.96, side: r() < 0.5 ? -1 : 1, off: 0.5 + r() * 0.2, s: S * (0.004 + r() * 0.007), c: r() });
+  }
+
+  function buildSky() {
+    const r = mulberry(555);
+    const cTop = hb + H * 0.012, cBot = hy - H * 0.014, band = Math.max(34, cBot - cTop);
+    cloudBand = { top: cTop, bot: cBot, h: band };
+    const defs = [
+      { x: 0.18, f: 0.55, s: 0.10, sp: 5 }, { x: 0.84, f: 0.25, s: 0.12, sp: 3.5 },
+      { x: 0.52, f: 0.85, s: 0.15, sp: 2.2 }, { x: 1.10, f: 0.65, s: 0.09, sp: 4 },
+    ];
+    clouds = defs.map((d) => {
+      const cs = Math.min(d.s * Math.min(W, H * 1.0), band * 0.78), puffs = [];
+      for (let k = 0; k < 6; k++) { const u = (k / 5) * 2 - 1, rr = 0.24 + 0.14 * (1 - Math.abs(u)) + r() * 0.03; puffs.push([u * 1.35, -rr * 0.5, rr]); }
+      for (let k = 0; k < 3; k++) { const u = (k / 2) * 2 - 1, rr = 0.30 + 0.14 * (1 - Math.abs(u)) + r() * 0.04; puffs.push([u * 0.62, -0.34 - rr * 0.35, rr]); }
+      const c = Object.assign({}, d, { cs, puffs, ph: r() });
+      c.light = cloudSprite(cs, puffs, { top: '#ffffff', mid: '#f8f2e8', low: '#dcd5d0', shade: 'rgba(170,160,170,0.5)', hi: 'rgba(255,255,255,0.45)', glow: 'rgba(255,255,255,0.22)' });
+      c.dark = cloudSprite(cs, puffs, { top: '#8c8798', mid: '#6f6a7b', low: '#4a4658', shade: 'rgba(30,28,44,0.55)', hi: 'rgba(190,186,204,0.55)', glow: 'rgba(80,76,96,0.18)' });
+      return c;
+    });
+    birds = []; for (let i = 0; i < 16; i++) birds.push({ y: r(), x: r(), sp: 8 + r() * 9, ph: r() * 6, s: 0.7 + r() * 0.6 });
+    flies = []; for (let i = 0; i < 7; i++) flies.push({ cx: 0.12 + r() * 0.76, cy: 0.55 + r() * 0.38, ax: 0.05 + r() * 0.1, ay: 0.03 + r() * 0.06, sp: 0.3 + r() * 0.4, ph: r() * 6, col: ['#f28aa5', '#b79af0', '#ffd55c', '#ffffff', '#ff9f5a'][i % 5], s: 0.9 + r() * 0.6 });
+    motes = []; for (let i = 0; i < 34; i++) motes.push({ x: r(), y: r(), sp: 0.01 + r() * 0.02, ph: r() * 6, s: 0.8 + r() * 1.4 });
+  }
+
+  function cloudSprite(cs, puffs, pal) {
+    const w = Math.ceil(cs * 4.2), h = Math.ceil(cs * 1.7), cv = makeCanvas(Math.ceil(w * DPR), Math.ceil(h * DPR)), g = cv.getContext('2d');
+    g.scale(DPR, DPR); g.translate(w / 2, h * 0.74);
+    g.save(); g.beginPath(); g.rect(-w, -h, w * 2, h + cs * 0.10); g.clip();
+    g.fillStyle = pal.glow; g.beginPath(); puffs.forEach((p) => { const rr = p[2] * cs * 1.14; g.moveTo(p[0] * cs + rr, p[1] * cs); g.arc(p[0] * cs, p[1] * cs, rr, 0, TAU); }); g.fill();
+    g.fillStyle = pal.shade; g.beginPath(); puffs.forEach((p) => { const rr = p[2] * cs, x = p[0] * cs, y = p[1] * cs + cs * 0.05; g.moveTo(x + rr, y); g.arc(x, y, rr, 0, TAU); }); g.fill();
+    const gr = g.createLinearGradient(0, -cs * 1.05, 0, cs * 0.1); gr.addColorStop(0, pal.top); gr.addColorStop(0.55, pal.mid); gr.addColorStop(1, pal.low);
+    g.fillStyle = gr; g.beginPath(); puffs.forEach((p) => { const rr = p[2] * cs * 0.97, x = p[0] * cs, y = p[1] * cs; g.moveTo(x + rr, y); g.arc(x, y, rr, 0, TAU); }); g.fill();
+    g.fillStyle = pal.hi; g.beginPath(); puffs.forEach((p) => { if (p[1] > -0.2) return; const rr = p[2] * cs * 0.6, x = p[0] * cs + p[2] * cs * 0.16, y = p[1] * cs - p[2] * cs * 0.24; g.moveTo(x + rr, y); g.arc(x, y, rr, 0, TAU); }); g.fill();
+    g.restore();
+    return { cv, w, h, ox: w / 2, oy: h * 0.74 };
+  }
+
+  /* ---------------- مجرى الماء ---------------- */
+  function bez(p0, p1, p2, p3, t) { const u = 1 - t, a = u * u * u, b = 3 * u * u * t, c = 3 * u * t * t, d = t * t * t; return [a * p0[0] + b * p1[0] + c * p2[0] + d * p3[0], a * p0[1] + b * p1[1] + c * p2[1] + d * p3[1]]; }
+  function streamCtl(wy) { return [[wx - wRx * 0.42, wy + wRy * 0.92], [wx - S * 0.20, wy + (H - wy) * 0.28], [wx + S * 0.08, wy + (H - wy) * 0.58], [wx - S * 0.30, H + S * 0.12]]; }
+  function streamWidth(t, c) { return S * (0.03 + 0.20 * Math.pow(t, 1.3)) * (1 + 0.45 * smooth(75, 84, c === undefined ? 100 : c)); }
+  function streamAt(y, wy) {
+    const q = streamCtl(wy); let best = null, bd = 1e9;
+    for (let i = 0; i <= 40; i++) { const t = i / 40, p = bez(q[0], q[1], q[2], q[3], t), d = Math.abs(p[1] - y); if (d < bd) { bd = d; best = { x: p[0], w: streamWidth(t, 100), t }; } }
+    return best;
+  }
+  function streamSamples(wy, c) {
+    const L = smooth(13, 25, c); if (L < 0.01) return null;
+    const q = streamCtl(wy), N = 56, out = [];
+    for (let i = 0; i <= N; i++) {
+      const t = L * i / N, p = bez(q[0], q[1], q[2], q[3], t), p2 = bez(q[0], q[1], q[2], q[3], Math.min(1, t + 0.01));
+      let dx = p2[0] - p[0], dy = p2[1] - p[1]; const m = Math.hypot(dx, dy) || 1; dx /= m; dy /= m;
+      out.push({ x: p[0], y: p[1], nx: -dy, ny: dx, w: streamWidth(t, c) * (0.6 + 0.4 * smooth(0, 0.1, t)), t });
+    }
+    return { pts: out, L, q };
+  }
+  function stripPath(ctx, pts, k) {
+    ctx.beginPath();
+    for (let i = 0; i < pts.length; i++) { const p = pts[i], x = p.x + p.nx * p.w * 0.5 * k, y = p.y + p.ny * p.w * 0.5 * k * 0.9; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i]; ctx.lineTo(p.x - p.nx * p.w * 0.5 * k, p.y - p.ny * p.w * 0.5 * k * 0.9); }
+    ctx.closePath();
+  }
+  function drawStream(ctx, st, t, c, skyHor) {
+    if (!st) return; const pts = st.pts;
+    ctx.fillStyle = 'rgba(70,54,30,0.40)'; stripPath(ctx, pts, 1.34); ctx.fill();
+    ctx.fillStyle = 'rgba(236,249,255,0.80)'; stripPath(ctx, pts, 1.07); ctx.fill();
+    ctx.fillStyle = rgb(mixc([146, 208, 238], skyHor, 0.18)); stripPath(ctx, pts, 0.98); ctx.fill();
+    ctx.fillStyle = '#69b5e3'; stripPath(ctx, pts, 0.76); ctx.fill();
+    ctx.fillStyle = '#4b9cd6'; stripPath(ctx, pts, 0.50); ctx.fill();
+    ctx.fillStyle = 'rgba(176,226,250,0.55)'; stripPath(ctx, pts, 0.20); ctx.fill();
+    ctx.save(); stripPath(ctx, pts, 1.0); ctx.clip();
+    const f = pts[0], l = pts[pts.length - 1], rg = ctx.createLinearGradient(0, f.y, 0, l.y); rg.addColorStop(0, 'rgba(255,255,255,0.22)'); rg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = rg; ctx.fillRect(0, f.y - 4, W, l.y - f.y + 8);
+    ctx.strokeStyle = '#ffffff'; ctx.lineCap = 'round';
+    const M = 34;
+    for (let k = 0; k < M; k++) {
+      const u = frac(k / M + t * 0.07), idx = u * (pts.length - 2), i = idx | 0, a = pts[i], b = pts[i + 1]; if (!b) continue;
+      const edge = k % 3 === 0, lat = edge ? (k % 2 ? 0.44 : -0.44) : (frac(k * 0.618) - 0.5) * 0.6, fr = idx - i;
+      const x = lerp(a.x, b.x, fr) + a.nx * a.w * lat, y = lerp(a.y, b.y, fr) + a.ny * a.w * lat * 0.9;
+      ctx.lineWidth = Math.max(0.8, a.w * (edge ? 0.022 : 0.03)); ctx.globalAlpha = (edge ? 0.7 : 0.25) + 0.3 * frac(k * 0.37);
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (b.x - a.x) * 1.2, y + (b.y - a.y) * 1.2); ctx.stroke();
+    }
+    ctx.restore(); ctx.globalAlpha = 1;
+    const last = pts[pts.length - 1];
+    if (st.L < 0.98) { ctx.fillStyle = '#8fcdee'; ctx.beginPath(); ctx.ellipse(last.x, last.y, last.w * 0.55, last.w * 0.4, 0, 0, TAU); ctx.fill(); }
+  }
+  function drawBank(ctx, st, c, t) {
+    if (!st) return; const q = st.q, rg = smooth(24, 40, c);
+    // حصى على الضفاف
+    ctx.fillStyle = 'rgba(40,36,30,0.28)';
+    const list = [];
+    pebbles.forEach((p) => { if (p.t > st.L) return; const pp = bez(q[0], q[1], q[2], q[3], p.t), w = streamWidth(p.t, c); list.push([pp[0] + p.side * w * p.off, pp[1] + 1, p.s, p.c]); });
+    list.forEach((p) => { ctx.fillStyle = 'rgba(40,30,16,0.3)'; ctx.beginPath(); ctx.ellipse(p[0] - p[2] * 0.2, p[1] + p[2] * 0.4, p[2] * 1.1, p[2] * 0.4, 0, 0, TAU); ctx.fill(); ctx.fillStyle = rgb(mixc(hex('#cfc3ae'), hex('#8f836f'), p[3])); ctx.beginPath(); ctx.ellipse(p[0], p[1], p[2], p[2] * 0.62, 0, 0, TAU); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.beginPath(); ctx.ellipse(p[0] + p[2] * 0.2, p[1] - p[2] * 0.2, p[2] * 0.4, p[2] * 0.2, 0, 0, TAU); ctx.fill(); });
+    if (rg < 0.01) return;
+    const arr = [];
+    blades.forEach((b) => { if (b.t > st.L) return; const pp = bez(q[0], q[1], q[2], q[3], b.t), w = streamWidth(b.t, c); arr.push({ x: pp[0] + b.side * w * b.off, y: pp[1] + 2, h: b.h * rg * (0.5 + b.t), n: b.n, ph: b.ph, cat: b.cat }); });
+    arr.sort((a, b) => a.y - b.y); ctx.lineCap = 'round';
+    arr.forEach((rd) => {
+      for (let k = 0; k < rd.n; k++) {
+        const u = k / (rd.n - 1) - 0.5, sw = Math.sin(t * 1.4 + rd.ph + k) * rd.h * 0.08, tx = rd.x + u * rd.h * 0.9 + sw, ty = rd.y - rd.h * (0.8 + 0.3 * frac(k * 0.41 + rd.ph));
+        ctx.strokeStyle = k % 2 ? '#4f8f33' : '#7ab94c'; ctx.lineWidth = Math.max(1, rd.h * 0.07);
+        ctx.beginPath(); ctx.moveTo(rd.x + u * rd.h * 0.3, rd.y); ctx.quadraticCurveTo(rd.x + u * rd.h * 0.6, rd.y - rd.h * 0.5, tx, ty); ctx.stroke();
+        if (rd.cat && k === 1) { ctx.fillStyle = '#5f3b22'; ctx.beginPath(); ctx.ellipse(tx, ty + rd.h * 0.08, rd.h * 0.05, rd.h * 0.14, 0, 0, TAU); ctx.fill(); }
+      }
+    });
+  }
+
+  /* ---------------- البئر ---------------- */
+  function stoneShape(ctx, st, wy) {
+    const px = wx + Math.cos(st.a) * wRx * st.off, py = wy + Math.sin(st.a) * wRy * st.off;
+    ctx.save(); ctx.translate(px, py); ctx.scale(1, wRy / wRx); ctx.rotate(st.a + Math.PI / 2 + st.rot);
+    const L = wRx * st.len, T = wRx * st.th;
+    ctx.fillStyle = 'rgba(40,28,14,0.34)'; ctx.beginPath(); ctx.ellipse(-L * 0.12, T * 0.55, L * 1.04, T * 0.8, 0, 0, TAU); ctx.fill();
+    const g = ctx.createLinearGradient(-L * 0.4, -T, L * 0.4, T); g.addColorStop(0, K.stoneA[st.ci]); g.addColorStop(1, K.stoneB[st.ci]);
+    ctx.fillStyle = g; ctx.strokeStyle = 'rgba(72,58,44,0.55)'; ctx.lineWidth = Math.max(0.6, wRx * 0.007);
+    ctx.beginPath(); ctx.ellipse(0, 0, L, T, 0, 0, TAU); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.34)'; ctx.beginPath(); ctx.ellipse(-L * 0.18, -T * 0.32, L * 0.55, T * 0.34, 0, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+  function ell(ctx, x, y, rx, ry) { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); }
+  function drawWell(ctx, wy, c, t, storm, skyHor, moist) {
+    const sh = ctx.createRadialGradient(wx, wy + wRy * 0.35, wRx * 0.6, wx, wy + wRy * 0.35, wRx * 1.25);
+    sh.addColorStop(0, 'rgba(50,30,12,0.34)'); sh.addColorStop(1, 'rgba(50,30,12,0)'); ctx.fillStyle = sh; ell(ctx, wx, wy + wRy * 0.35, wRx * 1.25, wRy * 1.4); ctx.fill();
+    stones.forEach((s) => { if (Math.sin(s.a) < 0.1) stoneShape(ctx, s, wy); });
+    const bx = wRx * 0.80, by = wRy * 0.80;
+    // جدار البئر الداخلي
+    const wall = ctx.createLinearGradient(0, wy - by, 0, wy + by); wall.addColorStop(0, '#8c7a66'); wall.addColorStop(0.5, '#6a5846'); wall.addColorStop(1, '#4a3a2c');
+    ctx.fillStyle = wall; ell(ctx, wx, wy, bx, by); ctx.fill();
+    const mud = ctx.createLinearGradient(0, wy - by * 0.7, 0, wy + by); mud.addColorStop(0, '#2f1c10'); mud.addColorStop(1, '#6d4729');
+    ctx.fillStyle = mud; ell(ctx, wx, wy + by * 0.14, bx * 0.94, by * 0.84); ctx.fill();
+    ctx.fillStyle = 'rgba(20,10,4,0.30)'; ell(ctx, wx, wy - by * 0.10, bx * 0.86, by * 0.5); ctx.fill();
+    const f = 1 - Math.exp(-c / 3);
+    if (f > 0.01) {
+      const rw = bx * 0.94 * (0.10 + 0.90 * f), rh = by * 0.84 * (0.10 + 0.90 * f), cy = wy + by * 0.14 * (1 - f * 0.6);
+      ctx.fillStyle = 'rgba(34,20,10,0.55)'; ell(ctx, wx, cy, rw * 1.05, rh * 1.09); ctx.fill();
+      const wg = ctx.createLinearGradient(0, cy - rh, 0, cy + rh);
+      wg.addColorStop(0, rgb(mixc([170, 222, 246], skyHor, 0.35))); wg.addColorStop(0.5, '#63b3e4'); wg.addColorStop(1, '#3a8bcb');
+      ctx.fillStyle = wg; ell(ctx, wx, cy, rw, rh); ctx.fill();
+      ctx.save(); ell(ctx, wx, cy, rw, rh); ctx.clip();
+      const rf = ctx.createRadialGradient(wx + rw * 0.3, cy - rh * 0.5, 0, wx + rw * 0.3, cy - rh * 0.5, rw); rf.addColorStop(0, 'rgba(255,255,255,0.32)'); rf.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = rf; ctx.fillRect(wx - rw, cy - rh, rw * 2, rh * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2 * U; ctx.beginPath(); ctx.ellipse(wx - rw * 0.18, cy - rh * 0.38, rw * 0.5, rh * 0.32, 0, Math.PI * 1.05, Math.PI * 1.85); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.26)'; ctx.lineWidth = 1.2 * U; ctx.beginPath(); ctx.ellipse(wx + rw * 0.25, cy + rh * 0.2, rw * 0.35, rh * 0.22, 0, Math.PI * 0.1, Math.PI * 0.8); ctx.stroke();
+      for (let k = 0; k < 2; k++) { const a = frac(t / 3.4 + k / 2); ctx.strokeStyle = `rgba(255,255,255,${0.35 * (1 - a)})`; ctx.lineWidth = 1 * U; ell(ctx, wx + rw * (k ? 0.25 : -0.2), cy + rh * (k ? 0.1 : -0.05), rw * 0.62 * a, rh * 0.62 * a); ctx.stroke(); }
+      if (storm > 0.05) for (let k = 0; k < 7; k++) {
+        const ph = t * 1.1 + k / 7, a = frac(ph), seed = Math.floor(ph) * 7 + k;
+        const rx = (frac(Math.sin(seed * 12.9898) * 43758.5453) - 0.5) * 1.5 * rw, ry = (frac(Math.sin(seed * 78.233) * 12345.6789) - 0.5) * 1.5 * rh;
+        ctx.strokeStyle = `rgba(255,255,255,${0.7 * (1 - a) * storm})`; ctx.lineWidth = 1 * U; ell(ctx, wx + rx, cy + ry, rw * 0.16 * a + 1, rh * 0.16 * a + 0.5); ctx.stroke();
+      }
+      for (let i = 0; i < ripples.length; i++) {
+        const rp = ripples[i], age = (t - rp.born) / 1.5; if (age < 0 || age > 1) continue;
+        for (let k = 0; k < 2; k++) { const a = age - k * 0.16; if (a <= 0) continue; const e = 1 - Math.pow(1 - a, 2); ctx.strokeStyle = `rgba(255,255,255,${0.6 * (1 - a) * (1 - a)})`; ctx.lineWidth = 1.1 * U; ell(ctx, rp.x, rp.y + by * 0.1, bx * 0.95 * e * 0.62, by * 0.95 * e * 0.62); ctx.stroke(); }
+      }
+      for (let k = 0; k < 6; k++) {
+        const a = Math.pow(Math.max(0, Math.sin(t * 1.7 + k * 2.3)), 8); if (a < 0.05) continue;
+        const sx = wx + (frac(k * 0.37) - 0.5) * rw * 1.3, sy = cy + (frac(k * 0.61) - 0.5) * rh * 1.2, sz = 3.4 * U * a;
+        ctx.strokeStyle = `rgba(255,255,255,${0.9 * a})`; ctx.lineWidth = 1 * U; ctx.beginPath(); ctx.moveTo(sx - sz, sy); ctx.lineTo(sx + sz, sy); ctx.moveTo(sx, sy - sz * 0.6); ctx.lineTo(sx, sy + sz * 0.6); ctx.stroke();
+      }
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1 * U; ell(ctx, wx, cy, rw, rh); ctx.stroke();
+    }
+    stones.forEach((s) => { if (Math.sin(s.a) >= 0.1) stoneShape(ctx, s, wy); });
+  }
+
+  /* ---------------- عناصر الغلاف الجوي ---------------- */
+  function drawCloud(ctx, cl, t, kind, alpha, px, py, ex) {
+    const sp = kind === 'dark' ? cl.dark : cl.light, scale = ex || 1;
+    const x = ((cl.x * W + t * cl.sp + cl.ph * 300) % (W * 1.5)) - W * 0.25 + px, y = cloudBand.top + cloudBand.h * (0.30 + 0.66 * cl.f) + py;
+    ctx.globalAlpha = alpha; ctx.drawImage(sp.cv, x - sp.ox * scale, y - sp.oy * scale, sp.w * scale, sp.h * scale); ctx.globalAlpha = 1;
+  }
+  function drawBird(ctx, x, y, s, fl) { ctx.beginPath(); ctx.moveTo(x - s, y - fl * s * 0.5); ctx.quadraticCurveTo(x - s * 0.45, y - s * (0.45 + fl * 0.3), x, y); ctx.quadraticCurveTo(x + s * 0.45, y - s * (0.45 + fl * 0.3), x + s, y - fl * s * 0.5); ctx.stroke(); }
+  function drawButterfly(ctx, x, y, s, col, fl) {
+    ctx.save(); ctx.translate(x, y); ctx.fillStyle = col; const w = Math.abs(Math.sin(fl)) * 0.85 + 0.15;
+    for (let k = -1; k <= 1; k += 2) {
+      ctx.beginPath(); ctx.ellipse(k * s * 0.5 * w, -s * 0.25, s * 0.5 * w, s * 0.42, k * 0.4, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(k * s * 0.36 * w, s * 0.28, s * 0.34 * w, s * 0.28, -k * 0.4, 0, TAU); ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(255,255,255,0.35)'; for (let k = -1; k <= 1; k += 2) { ctx.beginPath(); ctx.arc(k * s * 0.5 * w, -s * 0.3, s * 0.1 * w, 0, TAU); ctx.fill(); }
+    ctx.fillStyle = '#43342b'; ctx.fillRect(-s * 0.06, -s * 0.4, s * 0.12, s * 0.85); ctx.restore();
+  }
+  function drawTufts(ctx, list, baseY, grow, t, col1, col2, front) {
+    const g = ctx.createLinearGradient(0, baseY - H * 0.1, 0, baseY); g.addColorStop(0, col2); g.addColorStop(1, col1);
+    ctx.fillStyle = g; ctx.beginPath();
+    list.forEach((tf) => {
+      if (tf.gap || tf.front !== front) return;
+      for (let k = 0; k < tf.n; k++) {
+        const u = (k / (tf.n - 1)) - 0.5, bx = tf.x + u * H * 0.03, h = tf.h * grow * (front ? 1 : 0.78) * (0.7 + 0.5 * frac(k * 0.37 + tf.ph));
+        const sway = Math.sin(t * 1.3 + tf.ph + k) * h * 0.07, lean = u * h * 0.5 + sway, bw = Math.max(1.2, h * 0.07);
+        ctx.moveTo(bx - bw, baseY); ctx.quadraticCurveTo(bx + lean * 0.35, baseY - h * 0.6, bx + lean, baseY - h); ctx.quadraticCurveTo(bx + lean * 0.4 + bw * 0.4, baseY - h * 0.55, bx + bw, baseY);
+      }
+    });
+    ctx.fill();
+    if (grow > 0.5) {
+      ctx.fillStyle = '#c9b46a'; ctx.beginPath();
+      list.forEach((tf) => { if (tf.gap || tf.front !== front || !tf.seed) return; const h = tf.h * grow * (front ? 1.05 : 0.8), sway = Math.sin(t * 1.3 + tf.ph) * h * 0.06; ctx.moveTo(tf.x + sway + 2, baseY - h); ctx.ellipse(tf.x + sway, baseY - h, 1.6 * U, 4 * U, 0, 0, TAU); });
+      ctx.fill();
+    }
+  }
+  function drawFlower(ctx, f, sz, t) {
+    const sway = Math.sin(t * 1.6 + f.x * 0.05) * sz * 0.18, sh = sz * (1.2 + f.stem * 0.5), hx = f.x + sway, hy2 = f.y - sh;
+    if (f.ps > 0.25) { ctx.fillStyle = 'rgba(24,46,10,0.20)'; ctx.beginPath(); ctx.ellipse(f.x + sz * 0.3, f.y + sz * 0.15, sz * 0.8, sz * 0.28, 0, 0, TAU); ctx.fill(); }
+    ctx.strokeStyle = '#3f7d2a'; ctx.lineWidth = Math.max(0.7, sz * 0.13); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.quadraticCurveTo(f.x + sway * 0.2, f.y - sh * 0.5, hx, hy2); ctx.stroke();
+    ctx.fillStyle = '#58a23a'; ctx.beginPath(); ctx.ellipse(f.x + sz * 0.38, f.y - sh * 0.42, sz * 0.46, sz * 0.17, -0.5, 0, TAU); ctx.fill();
+    ctx.save(); ctx.translate(hx, hy2); ctx.scale(1, 0.84); ctx.rotate(f.rot);
+    const pr = sz * (f.long ? 0.46 : 0.52), pl = sz * (f.long ? 0.74 : 0.56), d = sz * 0.5;
+    ctx.fillStyle = f.col; ctx.beginPath();
+    for (let k = 0; k < f.n; k++) { const a = k * TAU / f.n, px = Math.cos(a) * d, py = Math.sin(a) * d; ctx.moveTo(px + pl, py); ctx.ellipse(px, py, pl, pr * 0.78, a, 0, TAU); }
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(70,40,40,0.18)'; ctx.lineWidth = 0.5; ctx.stroke();
+    ctx.fillStyle = f.center; ctx.beginPath(); ctx.arc(0, 0, sz * 0.36, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.arc(-sz * 0.1, -sz * 0.1, sz * 0.12, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+
+  /* ---------------- الإطار الكامل ---------------- */
+  function render(ctx, st) {
+    const c = clamp(st.c, 0, 100), t = st.t, cam = easeInOut(clamp(st.cam === undefined ? 1 : st.cam));
+    const PX = (st.px || 0), PY = (st.py || 0);
+    const wy = lerp(wyS, wyF, cam);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clearRect(0, 0, W, H);
+    const storm = smooth(21.5, 25, c) * (1 - smooth(29, 33, c));
+    const gSky = smooth(30, 47, c), gMt = smooth(28, 46, c), fin = smooth(97, 100, c);
+
+    // السماء
+    const top = mixc(mixc(K.skyTopDry, K.skyTopLush, gSky), K.skyTopStorm, storm * 0.85);
+    const mid = mixc(mixc(K.skyMidDry, K.skyMidLush, gSky), K.skyMidStorm, storm * 0.85);
+    const hor = mixc(mixc(K.skyHorDry, K.skyHorLush, gSky), K.skyHorStorm, storm * 0.85);
+    const sg = ctx.createLinearGradient(0, 0, 0, hy + H * 0.02); sg.addColorStop(0, rgb(top)); sg.addColorStop(0.55, rgb(mid)); sg.addColorStop(1, rgb(hor));
+    ctx.fillStyle = sg; ctx.fillRect(0, 0, W, hy + H * 0.03);
+    const sunA = smooth(33, 44, c), sx = W * 0.74 + PX * 3, sy = lerp(hy + H * 0.01, hy - H * 0.045, smooth(33, 50, c)) + PY * 2, sr = S * 0.058;
+    const glow = ctx.createRadialGradient(W * 0.72, hy, 0, W * 0.72, hy, W * 0.75);
+    glow.addColorStop(0, `rgba(255,232,160,${0.5 * (1 - gSky * 0.8) * (1 - storm)})`); glow.addColorStop(1, 'rgba(255,232,160,0)');
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, hy + H * 0.03);
+    if (sunA > 0.01) {
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      let g = ctx.createRadialGradient(sx, sy, sr * 0.4, sx, sy, sr * 5); g.addColorStop(0, `rgba(255,226,140,${0.16 * sunA * (1 - storm)})`); g.addColorStop(1, 'rgba(255,226,140,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, sr * 5, 0, TAU); ctx.fill();
+      ctx.restore();
+      const dg = ctx.createRadialGradient(sx - sr * 0.2, sy - sr * 0.2, 0, sx, sy, sr); dg.addColorStop(0, `rgba(255,250,214,${sunA * (1 - storm * 0.8)})`); dg.addColorStop(1, `rgba(255,214,100,${sunA * (1 - storm * 0.8)})`);
+      ctx.fillStyle = dg; ctx.beginPath(); ctx.arc(sx, sy, sr, 0, TAU); ctx.fill();
+    }
+
+    // الجبال: ثلاث طبقات مع ضباب جوّي وتظليل المنحدرات
+    const stormMt = storm * 0.55;
+    const cols = [mixc(K.mtFarDry, K.mtFarLush, gMt), mixc(mixc(K.mtFarDry, K.mtFarLush, gMt), mixc(K.mtNearDry, K.mtNearLush, gMt), 0.55), mixc(K.mtNearDry, K.mtNearLush, gMt)];
+    const front = mixc(K.mtFrontDry, K.mtFrontLush, gMt);
+    mtL.forEach((ly, li) => {
+      const base = mixc(li === 2 ? mixc(cols[2], front, 0.5) : cols[li], K.mtStorm, stormMt), body = mixc(base, hor, ly.haze);
+      const pts = ly.pts, ox = PX * ly.par, oy = PY * ly.par * 0.3, top0 = hy - H * 0.1;
+      const g = ctx.createLinearGradient(0, top0, 0, hy); g.addColorStop(0, rgb(mixc(body, [255, 255, 255], 0.12))); g.addColorStop(1, rgb(mixc(body, hor, 0.32)));
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(pts[0][0] + ox, hy + 6);
+      ctx.lineTo(pts[0][0] + ox, pts[0][1] + oy);
+      for (let i = 1; i < pts.length - 1; i++) { const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2; ctx.quadraticCurveTo(pts[i][0] + ox, pts[i][1] + oy, mx + ox, my + oy); }
+      ctx.lineTo(pts[pts.length - 1][0] + ox, hy + 6); ctx.closePath(); ctx.fill();
+      // تظليل: المنحدرات المواجهة لليسار بعيدة عن الشمس
+      ctx.save(); ctx.clip();
+      for (let i = 1; i < pts.length - 1; i++) {
+        const s = (pts[i + 1][1] - pts[i - 1][1]) / (pts[i + 1][0] - pts[i - 1][0]), x = pts[i][0] + ox, y = pts[i][1] + oy;
+        if (s < -0.05) { ctx.fillStyle = `rgba(40,36,70,${clamp(-s * 0.26, 0, 0.26)})`; ctx.fillRect(x - 2.5, y, 5.2, hy - y + 6); }
+        else if (s > 0.05) { ctx.fillStyle = `rgba(255,240,205,${clamp(s * 0.16, 0, 0.16)})`; ctx.fillRect(x - 2.5, y, 5.2, hy - y + 6); }
+      }
+      ctx.restore();
+      ctx.strokeStyle = rgb(mixc(body, [255, 250, 235], 0.45), 0.5); ctx.lineWidth = 1.1 * U; ctx.beginPath(); ctx.moveTo(pts[0][0] + ox, pts[0][1] + oy);
+      for (let i = 1; i < pts.length - 1; i++) { const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2; ctx.quadraticCurveTo(pts[i][0] + ox, pts[i][1] + oy, mx + ox, my + oy); } ctx.stroke();
+    });
+    const wf = smooth(84, 90, c);
+    if (wf > 0.02) {
+      const wxp = W * 0.19; let ty = hy - H * 0.05; const ly = mtL[1].pts;
+      for (let i = 0; i < ly.length; i++) if (ly[i][0] >= wxp) { ty = ly[i][1] + H * 0.008; break; }
+      ctx.globalAlpha = 0.9 * wf; ctx.fillStyle = '#f4fbff'; const ww = Math.max(2, W * 0.005); ctx.fillRect(wxp - ww / 2, ty, ww, hy - ty - 2);
+      ctx.globalAlpha = 0.55 * wf; ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      for (let k = 0; k < 5; k++) { const u = frac(k / 5 + t * 0.6); ctx.fillRect(wxp - ww * 0.3, ty + u * (hy - ty - 4), ww * 0.6, 4); }
+      ell(ctx, wxp, hy - 2, ww * 3, ww * 0.9); ctx.fill(); ctx.globalAlpha = 1;
+    }
+
+    // الغيوم (ضمن نطاق السماء الخالي من النصوص)
+    const lightA = 1 - storm * 0.85;
+    clouds.forEach((cl, i) => { drawCloud(ctx, cl, t, 'light', 0.97 * lightA + 0.0, PX * 5, PY * 2, 1); if (storm > 0.02) drawCloud(ctx, cl, t, 'dark', storm * 0.95, PX * 5, PY * 2, 1.0 + storm * 0.12); });
+
+    const bn = Math.floor(lerp(0, 5, smooth(40, 70, c)) + 11 * fin);
+    if (bn > 0) {
+      ctx.strokeStyle = 'rgba(58,48,66,0.8)'; ctx.lineWidth = 1.3 * U; ctx.lineCap = 'round';
+      for (let i = 0; i < Math.min(bn, birds.length); i++) {
+        const b = birds[i], sp = b.sp * (1 + fin * 0.6), x = ((b.x * W + t * sp) % (W * 1.2)) - W * 0.1, y = cloudBand.top + cloudBand.h * (0.15 + 0.7 * b.y) - fin * (x / W) * H * 0.05;
+        drawBird(ctx, x + PX * 6, y + PY * 2, 5 * U * b.s, Math.sin(t * 6 + b.ph));
+      }
+    }
+
+    // الأرض الجافة ثم الخضراء بنمو ناعم الحواف
+    ctx.save(); ctx.beginPath(); ctx.rect(0, hy, W, H - hy); ctx.clip();
+    ctx.drawImage(dryLayer, 0, 0, W, H);
+    const samples = streamSamples(wy, c), halo = smooth(8, 16, c), e = Math.pow(smooth(22, 43, c), 0.9);
+    if (halo > 0.01) {
+      ctx.save(); ctx.beginPath();
+      const k = 1 + 0.55 * smooth(12, 26, c), hk = lerp(0.6, 1, halo);
+      ctx.moveTo(wx + wRx * 1.12 * hk * k, wy + wRy * 0.1); ctx.ellipse(wx, wy + wRy * 0.1, wRx * 1.12 * hk * k, wRy * 1.2 * hk * k, 0, 0, TAU);
+      if (samples) { const bank = lerp(0.016, 0.07, smooth(14, 30, c)) * S; samples.pts.forEach((p) => { const rr = p.w / 2 + bank; ctx.moveTo(p.x + rr, p.y); ctx.ellipse(p.x, p.y, rr, rr * 0.62, 0, 0, TAU); }); }
+      if (e > 0.005) { const cx = wx - W * 0.05, cy = wy + H * 0.05, rx = W * 1.15 * e, ry = H * 0.6 * e; ctx.moveTo(cx + rx, cy); ctx.ellipse(cx, cy, rx, ry, 0, 0, TAU); }
+      ctx.lineJoin = 'round';
+      [[0.058, 0.12], [0.040, 0.20], [0.024, 0.34]].forEach(([lw, a]) => { ctx.lineWidth = S * lw; ctx.strokeStyle = `rgba(104,128,52,${a})`; ctx.stroke(); });
+      ctx.clip(); ctx.drawImage(lushLayer, 0, 0, W, H); ctx.restore();
+    }
+    ctx.restore();
+    const hz = ctx.createLinearGradient(0, hy - 2, 0, hy + H * 0.08); hz.addColorStop(0, rgb(hor, 0.6)); hz.addColorStop(1, rgb(hor, 0));
+    ctx.fillStyle = hz; ctx.fillRect(0, hy - 2, W, H * 0.08 + 2);
+
+    const dustA = 1 - smooth(14, 30, c);
+    if (dustA > 0.02) {
+      ctx.fillStyle = `rgba(255,243,208,${0.35 * dustA})`; ctx.beginPath();
+      for (let i = 0; i < 26; i++) { const x = frac(i * 0.37 + t * 0.006 * (1 + (i % 3))) * W, y = hy + frac(i * 0.61 + Math.sin(t * 0.2 + i) * 0.02) * (H - hy); ctx.moveTo(x + 1.3, y); ctx.arc(x, y, 1.3 * U, 0, TAU); }
+      ctx.fill();
+    }
+
+    trees.forEach((tr) => { if (tr.depth < 2) drawTree(ctx, tr, c, t, gSky); });
+    drawStream(ctx, samples, t, c, hor); drawBank(ctx, samples, c, t);
+    drawWell(ctx, wy, c, t, storm, hor);
+
+    for (let i = drops.length - 1; i >= 0; i--) {
+      const d = drops[i], a = (t - d.born) / d.dur;
+      if (a >= 1) { ripples.push({ x: d.x, y: wy + (d.dy || 0), born: t }); for (let k = 0; k < 6; k++) splashes.push({ x: d.x, y: wy + (d.dy || 0), vx: (Math.random() - 0.5) * 70 * U, vy: -(40 + Math.random() * 60) * U, born: t }); drops.splice(i, 1); continue; }
+      if (a < 0) continue;
+      const y = lerp(-20, wy + (d.dy || 0), a * a), s = 7 * U;
+      const dg = ctx.createLinearGradient(d.x - s, y, d.x + s, y); dg.addColorStop(0, '#8fd0f5'); dg.addColorStop(1, '#3d8fd0');
+      ctx.fillStyle = dg; ctx.beginPath(); ctx.moveTo(d.x, y - s * 1.7); ctx.quadraticCurveTo(d.x + s * 0.95, y + s * 0.2, d.x, y + s * 0.9); ctx.quadraticCurveTo(d.x - s * 0.95, y + s * 0.2, d.x, y - s * 1.7); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.beginPath(); ctx.arc(d.x - s * 0.3, y, s * 0.22, 0, TAU); ctx.fill();
+    }
+    ripples = ripples.filter((r) => t - r.born < 1.6);
+    ctx.fillStyle = 'rgba(190,228,250,0.9)';
+    for (let i = splashes.length - 1; i >= 0; i--) { const sp = splashes[i], a = t - sp.born; if (a > 0.6) { splashes.splice(i, 1); continue; } ctx.globalAlpha = 1 - a / 0.6; ctx.beginPath(); ctx.arc(sp.x + sp.vx * a, sp.y + sp.vy * a + 260 * U * a * a, 1.8 * U, 0, TAU); ctx.fill(); }
+    ctx.globalAlpha = 1;
+
+    const near = trees.filter((tr) => tr.depth === 2).sort((a, b) => a.base - b.base); let ni = 0;
+    const cx = wx - W * 0.05, cy = wy + H * 0.05, mrx = W * 1.15 * e * 0.94, mry = H * 0.6 * e * 0.94;
+    for (let i = 0; i < flowers.length; i++) {
+      const f = flowers[i];
+      while (ni < near.length && near[ni].base <= f.y) drawTree(ctx, near[ni++], c, t, gSky);
+      if (c < f.thr) continue;
+      const nx = (f.x - cx) / mrx, ny = (f.y - cy) / mry; if (nx * nx + ny * ny > 1) continue;
+      const sz = f.size * easeOutBack(clamp((c - f.thr) / 3.5)); if (sz < 0.3) continue;
+      drawFlower(ctx, f, sz, t);
+    }
+    while (ni < near.length) drawTree(ctx, near[ni++], c, t, gSky);
+
+    const fn = Math.floor(lerp(0, 3, smooth(62, 72, c)) + 4 * smooth(78, 92, c));
+    for (let i = 0; i < Math.min(fn, flies.length); i++) {
+      const b = flies[i], x = (b.cx + Math.sin(t * b.sp + b.ph) * b.ax) * W, y = hy + (b.cy - 0.43) * (H - hy) * 1.4 + Math.sin(t * b.sp * 1.7 + b.ph) * b.ay * H;
+      drawButterfly(ctx, x, y, 7 * U * b.s, b.col, t * 11 + b.ph);
+    }
+
+    const tg = smooth(38, 50, c);
+    if (tg > 0.01) { drawTufts(ctx, tufts, H + 3, tg, t, '#356a28', '#5a9a3a', false); drawTufts(ctx, tufts, H + 5, tg, t, '#27501f', '#4c8631', true); }
+
+    // حبوب لقاح ذهبية تطفو في الهواء
+    const mg = smooth(40, 60, c) * (1 - storm);
+    if (mg > 0.02) {
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      motes.forEach((m) => { const x = frac(m.x + t * m.sp * 0.4 + Math.sin(t * 0.5 + m.ph) * 0.01) * W, y = hy + frac(m.y - t * m.sp * 0.6) * (H - hy), a = (0.25 + 0.35 * Math.sin(t * 1.3 + m.ph) * Math.sin(t * 1.3 + m.ph)) * mg; const g = ctx.createRadialGradient(x, y, 0, x, y, 5 * U * m.s); g.addColorStop(0, `rgba(255,240,170,${a})`); g.addColorStop(1, 'rgba(255,240,170,0)'); ctx.fillStyle = g; ctx.fillRect(x - 6 * U * m.s, y - 6 * U * m.s, 12 * U * m.s, 12 * U * m.s); });
+      ctx.restore();
+    }
+
+    if (storm > 0.03) {
+      ctx.fillStyle = `rgba(48,50,72,${0.26 * storm})`; ctx.fillRect(0, 0, W, H);
+      const n = Math.round(170 * storm); ctx.strokeStyle = 'rgba(226,236,246,0.5)'; ctx.lineWidth = 1.1; ctx.beginPath();
+      for (let i = 0; i < n; i++) { const sp = 0.9 + 0.6 * frac(i * 0.7071), x = frac(i * 0.6180339 + t * 0.012) * (W + 80) - 40, y = frac(i * 0.3819 + t * sp * 1.15) * (H + 60) - 30, len = 14 + 12 * frac(i * 0.123); ctx.moveTo(x, y); ctx.lineTo(x - len * 0.18, y + len); }
+      ctx.stroke();
+    }
+
+    if (fin > 0.01) {
+      ctx.save(); ctx.translate(sx, sy); ctx.rotate(t * 0.03); const R = Math.hypot(W, H) * 1.3, n = 16;
+      const rg = ctx.createRadialGradient(0, 0, sr, 0, 0, R * 0.40); rg.addColorStop(0, 'rgba(255,247,205,0.20)'); rg.addColorStop(1, 'rgba(255,247,205,0)');
+      ctx.fillStyle = rg; ctx.globalAlpha = fin; ctx.beginPath();
+      for (let i = 0; i < n; i++) { const a0 = i / n * TAU, a1 = a0 + TAU / n * 0.5; ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a0) * R, Math.sin(a0) * R); ctx.lineTo(Math.cos(a1) * R, Math.sin(a1) * R); ctx.closePath(); }
+      ctx.fill(); ctx.restore();
+    }
+
+    // تدرّج لوني نهائي: دفء الشمس + تعتيم الأطراف + حبيبات خفيفة
+    ctx.save(); ctx.globalCompositeOperation = 'soft-light';
+    const wg2 = ctx.createLinearGradient(W, hy * 0.5, 0, H); wg2.addColorStop(0, `rgba(255,214,150,${0.14 + 0.12 * (1 - gSky)})`); wg2.addColorStop(1, 'rgba(255,214,150,0.0)');
+    ctx.fillStyle = wg2; ctx.fillRect(0, 0, W, H);
+    const cg = ctx.createLinearGradient(0, 0, 0, H); cg.addColorStop(0, 'rgba(70,90,160,0.10)'); cg.addColorStop(1, 'rgba(255,200,120,0.08)'); ctx.fillStyle = cg; ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+    const vg = ctx.createRadialGradient(W / 2, H * 0.55, Math.min(W, H) * 0.35, W / 2, H * 0.55, Math.hypot(W, H) * 0.62);
+    vg.addColorStop(0, 'rgba(40,24,10,0)'); vg.addColorStop(1, 'rgba(40,24,10,0.24)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+    if (grainCv) { ctx.save(); ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.07; const pat = ctx.createPattern(grainCv, 'repeat'); if (pat) { ctx.fillStyle = pat; ctx.fillRect(0, 0, W, H); } ctx.restore(); }
+    return { storm, wy, wellX: wx, rx: wRx, hy };
+  }
+
+  function addDrop(t) { drops.push({ born: t, dur: 0.5, x: wx + (Math.random() - 0.5) * wRx * 0.5, dy: (Math.random() - 0.5) * wRy * 0.4 }); }
+  function reset() { drops = []; ripples = []; splashes = []; }
+  function metrics() { return { W, H, hy, wyF, wRx }; }
+
+  const api = { init, resize, render, addDrop, reset, metrics, getHy };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  return api;
+})();
+
+</script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (s) { return document.querySelector(s); };
+  var AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+
+  /* ---------- النصوص (عربي / English) ---------- */
+  var TXT = {
+    ar: {
+      iKicker: 'لحظة قبل أن تمضي', iTitle: '١٠٠ × أستغفر الله', iSub: 'قطرة لكل استغفار. قُلها معنا.',
+      iHint: 'قُل «أستغفر الله» بلسانك، ثم المس الشاشة لتسقط قطرة في البئر.',
+      credit: 'تطوير: أبو الحسن عبدالهادي', start: 'ابدأ', resume: function (n) { return 'تابع من ' + n; }, viewDone: 'شاهد النتيجة', watch: 'مشاهدة تلقائية',
+      kicker: 'قُلها مع كل قطرة', meaning: 'أطلب المغفرة من الله',
+      m_rain: 'المطر', m_gardens: 'الجنات', m_rivers: 'الأنهار', m_forgiveness: 'المغفرة',
+      tap: 'قلتُها', tip: 'أو المس أي مكان في الشاشة',
+      doneTitle: '١٠٠ قطرة.', doneQuote: '«إِنَّهُ لَيُغَانُ عَلَى قَلْبِي، وَإِنِّي لَأَسْتَغْفِرُ اللَّهَ فِي الْيَوْمِ مِائَةَ مَرَّةٍ»',
+      doneSrc: 'رواه مسلم (٢٧٠٢)', doneCta: 'احفظها · وكرّرها غدًا', again: 'ابدأ من جديد', share: 'مشاركة', copied: 'تم نسخ الرابط',
+      shareText: 'أكملتُ ١٠٠ استغفار، قطرةً قطرة. جرّب معي:',
+      streak: function (n) { return n === 1 ? 'اليوم الأول في سلسلتك' : n === 2 ? 'يومان متتاليان' : n <= 10 ? n + ' أيام متتالية' : n + ' يومًا متتاليًا'; },
+      aria: { sound: 'الصوت', auto: 'تشغيل تلقائي', lang: 'English' }, langBtn: 'EN',
+      live: function (m) { return m; }
+    },
+    en: {
+      iKicker: 'Before you scroll', iTitle: '100 × Astaghfirullah', iSub: 'One drop for each. Say it with us.',
+      iHint: 'Say “Astaghfirullah” aloud, then tap the screen to let a drop fall into the well.',
+      credit: 'Developed by Abu Al-Hasan Abdulhadi', start: 'Begin', resume: function (n) { return 'Continue from ' + n; }, viewDone: 'See the result', watch: 'Watch on its own',
+      kicker: 'Say it with every drop', meaning: 'Astaghfirullah · I seek Allah’s forgiveness',
+      m_rain: 'Rain', m_gardens: 'Gardens', m_rivers: 'Rivers', m_forgiveness: 'Forgiveness',
+      tap: 'I said it', tip: 'Or tap anywhere on the screen',
+      doneTitle: '100 drops.', doneQuote: 'The Prophet (peace be upon him) sought Allah’s forgiveness a hundred times a day.',
+      doneSrc: 'Sahih Muslim 2702', doneCta: 'Save this · Say it again tomorrow', again: 'Start over', share: 'Share', copied: 'Link copied',
+      shareText: 'I said 100 istighfar, one drop at a time. Join me:',
+      streak: function (n) { return n === 1 ? 'Day 1 of your streak' : n + ' days in a row'; },
+      aria: { sound: 'Sound', auto: 'Auto play', lang: 'العربية' }, langBtn: 'ع'
+    }
+  };
+  var CARDS = {
+    25: { v: 'يُرْسِلِ السَّمَاءَ عَلَيْكُمْ مِدْرَارًا', ar: 'سورة نوح، الآية ١١', en: '“He will send down abundant rain upon you.”', ref: 'Qur’an 71:11', key: 'rain' },
+    50: { v: 'وَيَجْعَلْ لَكُمْ جَنَّاتٍ', ar: 'سورة نوح، الآية ١٢', en: '“…and grant you gardens.”', ref: 'Qur’an 71:12', key: 'gardens' },
+    75: { v: 'وَيَجْعَلْ لَكُمْ أَنْهَارًا', ar: 'سورة نوح، الآية ١٢', en: '“…and grant you rivers.”', ref: 'Qur’an 71:12', key: 'rivers' },
+    100: { v: 'اسْتَغْفِرُوا رَبَّكُمْ إِنَّهُ كَانَ غَفَّارًا', ar: 'سورة نوح، الآية ١٠', en: '“Seek your Lord’s forgiveness. He is ever Forgiving.”', ref: 'Qur’an 71:10', key: 'forgiveness' }
+  };
+  var CARD_AR = {
+    25: 'يرسل السماء عليكم مدرارًا', 50: 'ويجعل لكم جنات', 75: 'ويجعل لكم أنهارًا', 100: 'استغفروا ربكم إنه كان غفارًا'
+  };
+  var MILES = [25, 50, 75, 100];
+
+  /* ---------- الحالة والتخزين ---------- */
+  var KEY = 'mia-qatra:v1';
+  function dayStr(d) { return d.toLocaleDateString('en-CA'); }
+  var today = dayStr(new Date());
+  var y = new Date(); y.setDate(y.getDate() - 1); var yesterday = dayStr(y);
+  var st = { count: 0, lang: 'ar', muted: false, started: false, done: false, auto: false, streak: 0, lastDone: null, dp: 0, cam: 0, camAnim: false, camStart: 0, speed: 1, px: 0, py: 0, dim: false };
+  try {
+    var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (saved) {
+      st.lang = saved.lang === 'en' ? 'en' : 'ar'; st.muted = !!saved.muted; st.streak = saved.streak | 0; st.lastDone = saved.lastDone || null;
+      if (saved.day === today) st.count = Math.max(0, Math.min(100, saved.count | 0));
+    }
+  } catch (e) {}
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify({ day: today, count: st.count, lang: st.lang, muted: st.muted, streak: st.streak, lastDone: st.lastDone })); } catch (e) {}
+  }
+  var fmt = function (n) { return st.lang === 'ar' ? String(n).replace(/\d/g, function (d) { return AR_DIGITS[d]; }) : String(n); };
+
+  /* ---------- الصوت ---------- */
+  var Sound = {
+    ctx: null, master: null, rainGain: null,
+    ensure: function () {
+      if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+        this.ctx = new AC(); this.master = this.ctx.createGain(); this.master.gain.value = st.muted ? 0 : 0.9; this.master.connect(this.ctx.destination);
+        var len = this.ctx.sampleRate * 2, buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate), d = buf.getChannelData(0), last = 0;
+        for (var i = 0; i < len; i++) { var w = Math.random() * 2 - 1; last = (last + 0.02 * w) / 1.02; d[i] = last * 3.2; }
+        var src = this.ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+        var lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1400;
+        this.rainGain = this.ctx.createGain(); this.rainGain.gain.value = 0;
+        src.connect(lp); lp.connect(this.rainGain); this.rainGain.connect(this.master); src.start();
+      } catch (e) { this.ctx = null; }
+    },
+    setMuted: function (m) { if (this.master) this.master.gain.setTargetAtTime(m ? 0 : 0.9, this.ctx.currentTime, 0.05); },
+    storm: function (v) { if (this.rainGain) this.rainGain.gain.setTargetAtTime(v * 0.10, this.ctx.currentTime, 0.4); },
+    drop: function (delay) {
+      if (!this.ctx || st.muted) return; var c = this.ctx, t = c.currentTime + (delay || 0);
+      var o = c.createOscillator(), g = c.createGain(), f0 = 820 + Math.random() * 360;
+      o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * 0.36, t + 0.11);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.17, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.17);
+      o.connect(g); g.connect(this.master); o.start(t); o.stop(t + 0.22);
+      var o2 = c.createOscillator(), g2 = c.createGain(); o2.type = 'sine'; o2.frequency.setValueAtTime(f0 * 2, t); o2.frequency.exponentialRampToValueAtTime(f0 * 0.8, t + 0.08);
+      g2.gain.setValueAtTime(0.0001, t); g2.gain.exponentialRampToValueAtTime(0.05, t + 0.006); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+      o2.connect(g2); g2.connect(this.master); o2.start(t); o2.stop(t + 0.12);
+    },
+    chime: function (idx, big) {
+      if (!this.ctx || st.muted) return; var c = this.ctx, base = [523.25, 587.33, 659.25, 783.99][idx] || 523.25, notes = big ? [1, 1.25, 1.5, 2] : [1, 1.25, 1.5];
+      notes.forEach(function (m, i) {
+        var t = c.currentTime + 0.04 + i * 0.13, o = c.createOscillator(), g = c.createGain(); o.type = 'sine'; o.frequency.value = base * m;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + (big ? 2.6 : 1.6));
+        o.connect(g); g.connect(Sound.master); o.start(t); o.stop(t + (big ? 2.7 : 1.7));
+      });
+    }
+  };
+
+  /* ---------- اللوحة ---------- */
+  var elN = $('#n'), elFill = $('#fill'), elBar = $('#bar'), elCard = $('#card'), cardTimer = 0, finalTimer = 0;
+  function applyLang() {
+    var L = TXT[st.lang]; document.documentElement.lang = st.lang; document.documentElement.dir = st.lang === 'ar' ? 'rtl' : 'ltr';
+    document.title = st.lang === 'ar' ? 'مئة قطرة · ١٠٠ × أستغفر الله' : 'A Hundred Drops · 100 × Astaghfirullah';
+    document.querySelectorAll('[data-i]').forEach(function (el) { var v = L[el.getAttribute('data-i')]; if (typeof v === 'string') el.textContent = v; });
+    $('#bLangT').textContent = L.langBtn; $('#bLang').setAttribute('aria-label', L.aria.lang);
+    $('#bSound').setAttribute('aria-label', L.aria.sound); $('#bAuto').setAttribute('aria-label', L.aria.auto);
+    $('#of').textContent = '/ ' + fmt(100);
+    var s = $('#bStart'); s.textContent = st.count >= 100 ? L.viewDone : st.count > 0 ? L.resume(fmt(st.count)) : L.start;
+    updateHud(); renderStreak();
+    if (typeof scheduleFit === 'function') scheduleFit();
+  }
+  function updateHud() {
+    elN.textContent = fmt(st.count); elFill.style.width = st.count + '%'; elBar.setAttribute('aria-valuenow', st.count);
+    document.querySelectorAll('.ms').forEach(function (m) { m.classList.toggle('hit', st.count >= +m.getAttribute('data-at')); });
+  }
+  function renderStreak() { var el = $('#streak'); el.textContent = st.done && st.streak > 0 ? TXT[st.lang].streak(st.streak) : ''; }
+  function showCard(at) {
+    var c = CARDS[at]; if (!c) return; clearTimeout(cardTimer);
+    $('#cV').textContent = c.v; $('#cT').textContent = st.lang === 'ar' ? '' : c.en; $('#cR').textContent = st.lang === 'ar' ? c.ar : c.ref;
+    $('#cT').style.display = st.lang === 'ar' ? 'none' : '';
+    elCard.classList.add('show');
+    $('#live').textContent = (st.lang === 'ar' ? CARD_AR[at] + ' — ' + c.ar : c.en + ' ' + c.ref);
+    cardTimer = setTimeout(function () { elCard.classList.remove('show'); }, 5000);
+  }
+  function toast(msg) { var t = $('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function () { t.classList.remove('show'); }, 1800); }
+
+  /* ---------- اللوحة الرئيسية: النقر ---------- */
+  var lastTap = 0, clock = 0;
+  function tapOnce() {
+    if (!st.started || st.done) return;
+    var now = performance.now(); if (now - lastTap < 80) return; lastTap = now;
+    st.count++; Scene.addDrop(clock); Sound.drop(0.46);
+    if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) {} }
+    elN.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.16)' }, { transform: 'scale(1)' }], { duration: 240, easing: 'ease-out' });
+    var tb = $('#bTap'); tb.classList.remove('ping'); void tb.offsetWidth; tb.classList.add('ping');
+    if (st.count >= 3) document.body.classList.add('warm');
+    updateHud(); save();
+    var mi = MILES.indexOf(st.count);
+    if (mi >= 0) { showCard(st.count); Sound.chime(mi, st.count === 100); }
+    if (st.count >= 100) finish();
+  }
+  function finish() {
+    st.done = true; st.auto = false; syncAuto();
+    if (st.lastDone !== today) { st.streak = st.lastDone === yesterday ? st.streak + 1 : 1; st.lastDone = today; }
+    save();
+    clearTimeout(finalTimer); finalTimer = setTimeout(function () { clearTimeout(cardTimer); elCard.classList.remove('show'); document.body.classList.add('done'); renderStreak(); }, 5600);
+  }
+  function begin(auto) {
+    Sound.ensure(); Sound.setMuted(st.muted);
+    if (st.started) return; st.started = true; document.body.classList.add('playing');
+    st.camAnim = true; st.camStart = clock; if (st.count > 0) st.dp = st.count;
+    if (st.count >= 3) document.body.classList.add('warm');
+    if (st.count >= 100) { st.done = true; document.body.classList.add('done'); renderStreak(); }
+    else if (auto) { st.auto = true; syncAuto(); }
+  }
+  function syncAuto() { var b = $('#bAuto'); b.setAttribute('aria-pressed', st.auto ? 'true' : 'false'); $('#autoIcon').setAttribute('d', st.auto ? 'M7 5.5h3.5v13H7zM13.5 5.5H17v13h-3.5z' : 'M8 5.5v13l10-6.5z'); }
+  function reset() {
+    clearTimeout(finalTimer); clearTimeout(cardTimer); elCard.classList.remove('show');
+    st.count = 0; st.done = false; st.auto = false; st.speed = 6; Scene.reset(); syncAuto();
+    document.body.classList.remove('done'); document.body.classList.remove('warm'); updateHud(); applyLang(); save();
+  }
+
+  /* ---------- الأحداث ---------- */
+  var cv = $('#scene'), ctx = cv.getContext('2d');
+  cv.addEventListener('pointerdown', function (e) { if (e.button === 0 || e.pointerType !== 'mouse') tapOnce(); });
+  $('#bTap').addEventListener('pointerdown', function (e) { e.preventDefault(); tapOnce(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.repeat || (e.code !== 'Space' && e.code !== 'Enter')) return;
+    var b = e.target && e.target.closest ? e.target.closest('button') : null;
+    if (b && b.id !== 'bTap') return;
+    if (!st.started) return; e.preventDefault(); tapOnce();
+  });
+  $('#bStart').addEventListener('click', function () { begin(false); });
+  $('#bWatch').addEventListener('click', function () { if (st.count >= 100) { begin(false); return; } begin(true); });
+  $('#bAuto').addEventListener('click', function () { if (!st.started) { begin(true); return; } if (st.done) return; st.auto = !st.auto; syncAuto(); Sound.ensure(); });
+  $('#bSound').addEventListener('click', function () {
+    st.muted = !st.muted; Sound.ensure(); Sound.setMuted(st.muted);
+    var b = $('#bSound'); b.setAttribute('data-state', st.muted ? 'off' : 'on'); b.setAttribute('aria-pressed', st.muted ? 'true' : 'false'); save();
+  });
+  $('#bLang').addEventListener('click', function () { st.lang = st.lang === 'ar' ? 'en' : 'ar'; applyLang(); save(); });
+  $('#bAgain').addEventListener('click', reset);
+  $('#bShare').addEventListener('click', function () {
+    var url = location.href, text = TXT[st.lang].shareText;
+    if (navigator.share) { navigator.share({ title: document.title, text: text, url: url }).catch(function () {}); return; }
+    try { navigator.clipboard.writeText(text + ' ' + url).then(function () { toast(TXT[st.lang].copied); }, function () { toast(url); }); } catch (e) { toast(url); }
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (!Sound.ctx) return;
+    if (document.hidden) { Sound.storm(0); Sound.ctx.suspend(); } else Sound.ctx.resume();
+  });
+
+  /* ---------- الرسم ---------- */
+  function fit() {
+    var w = window.innerWidth, h = window.innerHeight, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    if (w * h * dpr * dpr > 3.4e6) dpr = Math.sqrt(3.4e6 / (w * h));
+    // نقيس أين تنتهي النصوص (الشريط وتسمياته) ليضع المشهد الغيوم والأفق تحتها
+    var bar = $('#bar'), hudBottom = 0;
+    if (bar && bar.getBoundingClientRect) { var rc = bar.getBoundingClientRect(); if (rc.bottom > 0) hudBottom = rc.bottom + 32; }
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); Scene.resize(w, h, dpr, { hudBottom: hudBottom });
+  }
+  var rt = 0; function scheduleFit() { clearTimeout(rt); rt = setTimeout(fit, 140); }
+  window.addEventListener('resize', scheduleFit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleFit);
+  var tx = 0, ty = 0;
+  window.addEventListener('pointermove', function (e) { if (e.pointerType === 'touch') return; tx = (e.clientX / window.innerWidth - 0.5) * 2; ty = (e.clientY / window.innerHeight - 0.5) * 2; });
+  Scene.init({});
+  fit();
+  $('#bSound').setAttribute('data-state', st.muted ? 'off' : 'on'); $('#bSound').setAttribute('aria-pressed', st.muted ? 'true' : 'false');
+  applyLang(); syncAuto();
+
+  var last = performance.now(), autoAcc = 0;
+  function frame(now) {
+    var dt = Math.min(0.05, (now - last) / 1000); last = now; clock += dt;
+    if (st.camAnim) { st.cam = Math.min(1, (clock - st.camStart) / 1.8); if (st.cam >= 1) st.camAnim = false; }
+    if (st.auto && st.started && !st.done) { autoAcc += dt; if (autoAcc >= 1.15) { autoAcc = 0; tapOnce(); } }
+    var diff = st.count - st.dp;
+    if (Math.abs(diff) < 0.004) { st.dp = st.count; if (st.speed > 1) st.speed = 1; }
+    else {
+      var k = 1 - Math.exp(-dt * 4.2 * st.speed), step = diff * k, minS = Math.min(Math.abs(diff), 4 * st.speed * dt);
+      if (Math.abs(step) < minS) step = (diff > 0 ? 1 : -1) * minS; st.dp += step;
+    }
+    st.px += (tx - st.px) * 0.05; st.py += (ty - st.py) * 0.05;
+    var m = Scene.render(ctx, { c: st.dp, t: clock, cam: st.started || st.cam > 0 ? st.cam : 0, px: st.px, py: st.py });
+    var dim = m.storm > 0.4; if (dim !== st.dim) { st.dim = dim; document.body.classList.toggle('dim', dim); }
+    Sound.storm(st.started && !document.hidden ? m.storm : 0);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
