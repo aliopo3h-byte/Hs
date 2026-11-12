@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>صعود</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=El+Messiri:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void: #000000;
+    --ink: #ece6fb;
+    --ink-dim: #a39db6;
+    color-scheme: dark;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --void: #000000; --ink: #ece6fb; --ink-dim: #a39db6; }
+  }
+  :root[data-theme="dark"] { --void: #000000; --ink: #ece6fb; --ink-dim: #a39db6; }
+
+  *, *::before, *::after { box-sizing: inherit; }
+  html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    height: 100%;
+    margin: 0;
+    background: var(--void);
+    color: var(--ink);
+    font-family: "El Messiri", "Noto Sans Arabic", "Geeza Pro", "Segoe UI", Tahoma, sans-serif;
+    letter-spacing: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #stage { position: fixed; inset: 0; display: grid; place-items: center; touch-action: none; cursor: grab; }
+  #stage:focus-visible { outline: 2px solid var(--ink); outline-offset: -4px; }
+  canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+
+  .hud {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 14px);
+    left: 0; right: 0;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 0 18px;
+    pointer-events: none;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-shadow: 0 0 6px var(--void), 0 0 2px var(--void);
+    transition: opacity 0.5s ease;
+  }
+  body.title .hud, body.title .mute { opacity: 0; pointer-events: none; }
+  .hud .stars { justify-self: end; }
+  .lives { display: flex; gap: 6px; direction: ltr; }
+  .lives svg { width: 14px; height: 20px; fill: var(--ink); stroke: var(--ink); stroke-width: 1; }
+  .lives svg.out { fill: none; stroke: var(--ink-dim); }
+
+  .banner {
+    position: fixed;
+    left: 0; right: 0;
+    top: calc(env(safe-area-inset-top, 0px) + 15vh);
+    text-align: center;
+    font-family: "Aref Ruqaa", "El Messiri", "Geeza Pro", Tahoma, sans-serif;
+    font-size: 38px;
+    font-weight: 700;
+    line-height: 1.4;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.9s ease;
+    text-shadow: 0 0 10px var(--void), 0 0 3px var(--void);
+  }
+  .banner.on { opacity: 1; }
+
+  .hint {
+    position: fixed;
+    left: 0; right: 0;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 10vh);
+    padding: 0 22px;
+    text-align: center;
+    pointer-events: none;
+    text-shadow: 0 0 8px var(--void), 0 0 2px var(--void);
+    transition: opacity 0.6s ease;
+  }
+  .hint.gone { opacity: 0; }
+  .hint b { display: block; font-family: "Aref Ruqaa", "El Messiri", "Geeza Pro", Tahoma, sans-serif; font-weight: 700; font-size: 34px; line-height: 1.4; }
+  .hint small { display: block; font-size: 18px; color: var(--ink-dim); margin-top: 6px; line-height: 1.5; }
+  .hint .go { color: var(--ink); font-weight: 700; animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.35; } }
+
+  /* واجهة البداية: العنوان في الأعلى ولوحة البدء في الأسفل */
+  .start {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    justify-content: space-between; align-items: center;
+    gap: 16px;
+    padding: calc(env(safe-area-inset-top, 0px) + 5vh) 20px calc(env(safe-area-inset-bottom, 0px) + 22px);
+    background: linear-gradient(to bottom,
+      rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 22%, rgba(0,0,0,0) 40%,
+      rgba(0,0,0,0) 58%, rgba(0,0,0,0.88) 68%, rgba(0,0,0,0.97) 100%);
+    transition: opacity 0.7s ease, visibility 0.7s;
+    overflow-y: auto;
+  }
+  .start.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+  .start-head { text-align: center; animation: drop 0.9s ease both; }
+  .start-panel { animation: rise 0.9s 0.15s ease both; }
+  @keyframes drop { from { opacity: 0; transform: translateY(-14px); } }
+  @keyframes rise { from { opacity: 0; transform: translateY(18px); } }
+  .start h1 {
+    margin: 0;
+    font-family: "Aref Ruqaa", "El Messiri", "Geeza Pro", Tahoma, serif;
+    font-weight: 700;
+    font-size: clamp(88px, 31vw, 140px);
+    line-height: 1.2;
+    text-shadow: 0 0 26px rgba(236,230,251,0.35), 0 3px 0 var(--void);
+  }
+  .start .rule {
+    width: 150px; height: 9px; margin: 0 auto 10px;
+    background:
+      linear-gradient(var(--ink), var(--ink)) center / 9px 9px no-repeat,
+      linear-gradient(var(--ink-dim), var(--ink-dim)) center / 100% 1px no-repeat;
+    position: relative;
+  }
+  .start .rule::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: 9px; height: 9px; background: var(--ink);
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+  .start .kicker { margin: 0; font-size: 18px; font-weight: 500; color: var(--ink); text-shadow: 0 0 8px var(--void), 0 0 2px var(--void); }
+
+  .start-panel {
+    width: min(100%, 372px);
+    padding: 18px 18px 12px;
+    background: rgba(0,0,0,0.78);
+    border: 1px solid var(--ink-dim);
+    box-shadow: 0 0 0 4px var(--void), 0 0 0 5px var(--ink-dim);
+  }
+  .play {
+    display: block;
+    width: 100%; min-height: 60px;
+    padding: 8px 20px;
+    font-family: "Aref Ruqaa", "El Messiri", "Geeza Pro", Tahoma, serif;
+    font-weight: 700;
+    font-size: 30px; line-height: 1.3;
+    color: var(--void);
+    background: var(--ink);
+    border: 0;
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.12s ease;
+  }
+  .play:active { transform: scale(0.97); background: #ffffff; }
+  .play:focus-visible { outline: 3px solid var(--ink); outline-offset: 5px; }
+  .start .record {
+    margin: 12px 0 0; padding: 7px 10px;
+    font-size: 16px; font-weight: 700; text-align: center;
+    border: 1px dashed var(--ink-dim);
+  }
+  .start .record:empty { display: none; }
+  .how { list-style: none; margin: 12px 0 0; padding: 0; font-size: 16px; line-height: 1.5; color: var(--ink); }
+  .how li {
+    display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: center;
+    padding: 8px 2px; text-align: start;
+    border-top: 1px solid rgba(163,157,182,0.35);
+  }
+  .how svg { width: 22px; height: 22px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .credit {
+    margin: 4px 0 0; padding-top: 10px;
+    border-top: 1px solid var(--ink-dim);
+    font-size: 14px; text-align: center; color: var(--ink-dim);
+  }
+  .credit bdi { font-weight: 700; color: var(--ink); }
+
+  .mute {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+    left: 14px;
+    width: 44px; height: 44px;
+    display: grid; place-items: center;
+    background: var(--void);
+    color: var(--ink);
+    border: 1px solid var(--ink-dim);
+    border-radius: 0;
+    padding: 0;
+    cursor: pointer;
+    transition: opacity 0.5s ease;
+  }
+  .mute:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .mute svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; }
+  .mute .off { display: none; }
+  .mute[aria-pressed="true"] .on { display: none; }
+  .mute[aria-pressed="true"] .off { display: inline; }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  @media (max-width: 260px) {
+    .hud { font-size: 13px; padding: 0 8px; top: calc(env(safe-area-inset-top, 0px) + 8px); }
+    .lives svg { width: 9px; height: 13px; }
+    .hint b { font-size: 20px; } .hint small { font-size: 13px; }
+    .banner { font-size: 20px; }
+    .start h1 { font-size: 52px; } .play { font-size: 20px; min-height: 44px; }
+    .start { padding-left: 8px; padding-right: 8px; } .start-panel { padding: 8px; }
+    .how, .start .kicker, .credit { display: none; }
+    .mute { display: none; }
+  }
+  @media (max-height: 520px) { .how { display: none; } .start h1 { font-size: 64px; } }
+  @media (prefers-reduced-motion: reduce) {
+    .hint, .banner, .start, .hud { transition: none; }
+    .hint .go, .start-head, .start-panel { animation: none; }
+  }
+</style>
+</head>
+<body class="title">
+<div id="stage" tabindex="0" role="application" aria-label="لعبة صعود: اسحب لتدير البرج أو اضغط مطوّلاً لتصعد الدرج الحلزوني، وتفادَ الصخور الساقطة">
+  <canvas id="c"></canvas>
+</div>
+<div class="hud">
+  <span id="floor">الطابق ٠</span>
+  <span class="lives" id="lives" role="img" aria-label="الشعلات الباقية ٣"></span>
+  <span class="stars" id="stars">✦ ٠</span>
+</div>
+<div class="banner" id="banner"></div>
+<div class="hint gone" id="hint"></div>
+<button class="mute" id="mute" type="button" aria-pressed="false" aria-label="كتم الصوت">
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M3 9h4l5-4v14l-5-4H3z"/>
+    <path class="on" d="M16 9c1.5 1.5 1.5 4.5 0 6M19 6c3 3 3 9 0 12"/>
+    <path class="off" d="M16 9l6 6M22 9l-6 6"/>
+  </svg>
+</button>
+<div class="start" id="start">
+  <header class="start-head">
+    <h1>صعود</h1>
+    <div class="rule" aria-hidden="true"></div>
+    <p class="kicker">برجٌ بلا نهاية وشعلة واحدة</p>
+  </header>
+  <div class="start-panel">
+    <button class="play" id="play" type="button">ابدأ الصعود</button>
+    <p class="record" id="record"></p>
+    <ul class="how">
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/></svg><span>اسحب بإصبعك ليدور البرج</span></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8.5"/></svg><span>أو اضغط مطوّلاً لتصعد دون توقف</span></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 6.2 6.4.5-4.9 4.2 1.5 6.3L12 16.9 6.4 20.2l1.5-6.3L3 9.7l6.4-.5z"/></svg><span>تفادَ الصخور واجمع النجوم</span></li>
+    </ul>
+    <p class="credit">تطوير <bdi>ابوالحسن عبدالهادي 42i</bdi></p>
+  </div>
+</div>
+<div class="sr" id="live" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ---------- ثوابت العالم (كل وحدة عالم = S بكسل) ----------
+  const S = 2, TAU = Math.PI * 2;
+  const RW = 44;                  // نصف قطر البرج
+  const RS = 62;                  // طرف الدرجة الخارجي
+  const RM = 53;                  // خط سير الفارس
+  const RG = 84;                  // نصف قطر الصخرة التي يقوم عليها البرج
+  const N = 24, DA = TAU / N;     // درجات كل لفّة
+  const SH = 4, REV = N * SH, TH = 6;
+  const TREAD_PX = RM * DA * S, RISE_PX = SH * S;   // المسافة بين درجتين على الشاشة
+  const TILT = 0.32, TS = TILT * S;
+  const ZONE_LEN = 6, CP_EVERY = 3;
+  const MOON_A = 0.9;             // اتجاه ضوء القمر في العالم
+  const ZONES = ['أسفل البرج', 'جدار اللبلاب', 'برج الرموز'];
+  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => (v + 0.5) / 16);
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const $ = id => document.getElementById(id);
+  const stage = $('stage'), canvas = $('c'), ctx = canvas.getContext('2d');
+  const floorEl = $('floor'), livesEl = $('lives'), starsEl = $('stars');
+  const hintEl = $('hint'), bannerEl = $('banner'), liveEl = $('live'), muteEl = $('mute');
+  const startEl = $('start'), playEl = $('play'), recordEl = $('record');
+
+  const mod = (a, n) => ((a % n) + n) % n;
+  const wrap = a => mod(a + Math.PI, TAU) - Math.PI;
+  function hash(n) {
+    n = Math.imul(n ^ 0x9e3779b9, 0x85ebca6b); n ^= n >>> 13;
+    n = Math.imul(n, 0xc2b2ae35); n ^= n >>> 16;
+    return (n >>> 0) / 4294967296;
+  }
+  function vnoise(x, y, perX, perY) {
+    const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi;
+    const x0 = mod(xi, perX), x1 = mod(xi + 1, perX), y0 = mod(yi, perY), y1 = mod(yi + 1, perY);
+    const a = hash(x0 * 374761 + y0 * 668265 + 11), b = hash(x1 * 374761 + y0 * 668265 + 11);
+    const c = hash(x0 * 374761 + y1 * 668265 + 11), d = hash(x1 * 374761 + y1 * 668265 + 11);
+    const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+    return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+  }
+  const zoneOf = k => Math.floor(Math.max(0, k) / ZONE_LEN) % 3;
+
+  // ---------- السماء: نجوم وغيوم تُحسب مرة واحدة ----------
+  const PER = 1005, SKH = 512, SKY_K = PER / TAU;
+  const starTex = new Uint8Array(PER * SKH), cloudTex = new Uint8Array(PER * SKH);
+  (function buildSky() {
+    for (let y = 0, i = 0; y < SKH; y++) for (let x = 0; x < PER; x++, i++) {
+      const n = vnoise(x / PER * 14, y / SKH * 9, 14, 9) * 0.65 + vnoise(x / PER * 28, y / SKH * 18, 28, 18) * 0.35;
+      cloudTex[i] = n > 0.6 ? Math.min(70, (n - 0.6) * 1.6 * 255) : 0;
+      if (hash(i * 31 + 5) > 0.9905) starTex[i] = 1 + ((hash(i * 17 + 3) * 200) | 0);
+    }
+    for (let k = 0; k < 90; k++) {       // نجوم أكبر على شكل صليب
+      const x = (hash(k * 911 + 1) * PER) | 0, y = 3 + ((hash(k * 577 + 2) * (SKH - 6)) | 0);
+      const big = hash(k * 13) > 0.6 ? 2 : 1;
+      for (let d = -big; d <= big; d++) {
+        starTex[y * PER + mod(x + d, PER)] = 255;
+        starTex[(y + d) * PER + x] = 255;
+      }
+    }
+  })();
+
+  // ---------- الشاشة وذاكرة نسيج البرج ----------
+  let W = 290, H = 580, PXC = 1.4, img = null, buf = null, cx = 145;
+  const RC = RW * S;
+  const CU = Math.round(TAU * RC);
+  const CH = 64;
+  const chunks = new Map();
+  let tx0 = 0, tx1 = 0, colPhi, colCos, colDep, colU, colXw, colDw;
+
+  function resize() {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const dpr = window.devicePixelRatio || 1;
+    let dev = Math.max(1, Math.round(Math.min(vw, vh, 520) / 270 * dpr));
+    do {
+      PXC = dev / dpr;
+      W = Math.ceil(vw / PXC); H = Math.ceil(vh / PXC);
+      dev++;
+    } while (W * H > 340000);
+    canvas.width = W; canvas.height = H;
+    canvas.style.width = (W * PXC) + 'px';
+    canvas.style.height = (H * PXC) + 'px';
+    img = ctx.createImageData(W, H);
+    buf = new Float32Array(W * H);
+    cx = W >> 1;
+    tx0 = Math.max(0, cx - RC); tx1 = Math.min(W - 1, cx + RC - 1);
+    const n = tx1 - tx0 + 1;
+    colPhi = new Float32Array(n); colCos = new Float32Array(n); colDep = new Int32Array(n);
+    colU = new Float32Array(n); colXw = new Float32Array(n); colDw = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const X = tx0 + i - cx + 0.5, ph = Math.asin(Math.max(-1, Math.min(1, X / RC))), c = Math.cos(ph);
+      colPhi[i] = ph; colCos[i] = c; colDep[i] = Math.round(RC * c * TILT);
+      colU[i] = ph / TAU * CU; colXw[i] = X / S; colDw[i] = RW * c;
+    }
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ---------- نسيج سطح البرج ----------
+  const winCache = new Map();
+  function winsAt(n) {
+    let w = winCache.get(n);
+    if (w) return w;
+    w = [];
+    if (n >= 0) {
+      const a0 = hash(n * 31 + 7) * TAU;
+      for (let j = 0; j < 2; j++) {
+        const h = hash(n * 7919 + j * 101 + 13);
+        if (h > (j ? 0.45 : 0.8)) continue;
+        const a = mod(a0 + j * Math.PI, TAU);
+        w.push({ a, y: (a / TAU + n) * REV + 38, glow: h < (j ? 0.25 : 0.5) });
+      }
+    }
+    winCache.set(n, w);
+    if (winCache.size > 200) winCache.clear();
+    return w;
+  }
+  function bricks(a, wy) {
+    const row = Math.floor(wy / 7);
+    const bu = a / TAU * 20 + (row & 1) * 0.5, bi = Math.floor(bu);
+    if (mod(wy, 7) < 0.6 || bu - bi < 0.045) return 0.1;
+    const hb = hash(row * 131 + (bi % 20) * 17);
+    return hb > 0.92 ? 0.17 : 0.27 + hb * 0.17;
+  }
+  function towerTex(a, wy) {
+    const m = towerBase(a, wy);
+    if (m <= 0) return m;
+    // ظل الدرج على الجدار: أغمق تحته مباشرة، وأثر خفيف فوقه
+    const hs = mod(wy - a / TAU * REV, REV);
+    if (hs > REV - TH - 11 && hs <= REV - TH + 1) return m * (0.32 + 0.6 * (REV - TH + 1 - hs) / 12);
+    if (hs < 2.2) return m * 0.7;
+    return m;
+  }
+  function towerBase(a, wy) {
+    const n0 = Math.floor(wy / REV);
+    for (let n = n0; n >= n0 - 1; n--) {
+      const ws = winsAt(n);
+      for (let q = 0; q < ws.length; q++) {
+        const w = ws[q];
+        const ax = wrap(a - w.a) * RW, ay = wy - w.y, aax = ax < 0 ? -ax : ax;
+        if (aax > 12 || ay < -3 || ay > 36) continue;
+        if (ay < 0) return 0.95;
+        const up = ay - 20;
+        if (!(aax <= 10 && (ay < 20 || (aax + 6) * (aax + 6) + up * up <= 272))) continue;
+        const inInner = ay >= 2 && aax <= 8 && (ay < 20 || (aax + 6) * (aax + 6) + up * up <= 204);
+        if (!inInner) return 0.95;
+        if ((ax >= -0.6 && ax < 0.6) || (ay >= 13 && ay < 14.2)) return 0.85;
+        if (!w.glow) return mod(ax, 4) < 0.8 ? 0.7 : 0;
+        if (mod(ax + ay, 6) < 0.7 || mod(ax - ay, 6) < 0.7) return 0;
+        return -0.62;
+      }
+    }
+    if (wy < 6) return mod(wy, 6) < 0.6 || mod(a / TAU * 12, 1) < 0.04 ? 0.08 : 0.5;   // قاعدة البرج
+    const fb = mod(wy, REV);                                     // إفريز حجري عند كل طابق
+    if (fb < 1.3) return 0.78;
+    if (fb < 2.6) return 0.1;
+    if (fb > REV - 1.2) return 0.55;
+    const zone = zoneOf(n0);
+    if (zone === 1) {
+      const nv = vnoise(a / TAU * 10, wy / 24, 10, 4096);
+      if (nv > 0.54) {
+        const hl = hash(Math.floor(a / TAU * 110) * 57 + Math.floor(wy / 2.5) * 113);
+        return hl > 0.5 ? 0.85 : hl > 0.22 ? 0.42 : 0.06;
+      }
+      return bricks(a, wy);
+    }
+    if (zone === 2) {
+      const row = Math.floor(wy / 14);
+      const bu = a / TAU * 10 + (row & 1) * 0.5, bi = Math.floor(bu), fr = bu - bi, frv = mod(wy, 14) / 14;
+      if (frv < 0.05 || fr < 0.025) return 0.07;
+      const id = row * 131 + (bi % 10) * 17;
+      if (hash(id) < 0.32) {
+        const ci = Math.floor((fr - 0.5) * 27.6 / 1.7 + 2.5), ri = Math.floor((frv - 0.5) * 14 / 1.7 + 2.5);
+        if (ci >= 0 && ci < 5 && ri >= 0 && ri < 5 && hash(id * 91 + (ci > 2 ? 4 - ci : ci) * 7 + ri * 13) > 0.5) return -0.9;
+      }
+      return 0.3 + hash(id + 5) * 0.14;
+    }
+    return bricks(a, wy);
+  }
+  function getChunk(cy) {
+    let c = chunks.get(cy);
+    if (c) return c;
+    c = new Float32Array(CU * CH);
+    for (let r = 0, i = 0; r < CH; r++) {
+      const wy = (cy * CH + r) / S;
+      for (let u = 0; u < CU; u++, i++) c[i] = towerTex(u / CU * TAU, wy);
+    }
+    chunks.set(cy, c);
+    if (chunks.size > 26) for (const key of chunks.keys()) if (Math.abs(key - cy) > 12) chunks.delete(key);
+    return c;
+  }
+
+  // ---------- رسوم صغيرة ----------
+  function scale2x(rows) {
+    const h = rows.length, w = rows[0].length;
+    const g = (r, c) => (r < 0 || c < 0 || r >= h || c >= w) ? '.' : rows[r][c];
+    const out = [];
+    for (let r = 0; r < h; r++) {
+      let l1 = '', l2 = '';
+      for (let c = 0; c < w; c++) {
+        const Pp = g(r, c), A = g(r - 1, c), B = g(r, c + 1), C = g(r, c - 1), D = g(r + 1, c);
+        l1 += (C === A && C !== D && A !== B ? A : Pp) + (A === B && A !== C && B !== D ? B : Pp);
+        l2 += (D === C && D !== B && C !== A ? C : Pp) + (B === D && B !== A && D !== C ? D : Pp);
+      }
+      out.push(l1, l2);
+    }
+    return out;
+  }
+  const up = scale2x;
+  const GHOST = up([
+    '.....#####.....', '...#########...', '..###########..', '.#############.',
+    '.###oo###oo###.', '.###oo###oo###.', '.#############.', '.######o######.',
+    '.#############.', '.#############.', '..############.', '..###########..',
+    '...#########...', '....#######....', '.....######....', '......#####....',
+    '.......####....', '.........###...', '...........##..'
+  ]);
+  const FLAME = [
+    up(['...#...', '...#...', '..###..', '..###..', '.#####.', '.##o##.', '.##o##.', '.#####.', '..###..']),
+    up(['..#....', '...#...', '..###..', '.####..', '.#####.', '.##o##.', '.##o##.', '.#####.', '..###..'])
+  ];
+  const ROCK = [
+    up(['..#####..', '.#######.', '###o#####', '####oo###', '#########', '##o######', '.#######.', '..####...']),
+    up(['...####..', '.#######.', '######o##', '###o#####', '##oo#####', '########.', '.#######.', '...###...'])
+  ];
+  const STAR = [
+    up(['...#...', '...#...', '..###..', '#######', '..###..', '...#...', '...#...']),
+    up(['.......', '...#...', '...#...', '.#####.', '...#...', '...#...', '.......'])
+  ];
+  const BAT = [
+    up(['##..#.#..##', '.#########.', '..#######..', '...#.#.#...']),
+    up(['....#.#....', '..#######..', '.#########.', '##.#####.##'])
+  ];
+  const BRAZIER = up(['#########', '.#######.', '..#####..', '....#....', '....#....', '....#....', '..#####..', '.#######.']);
+  const MARK = up(['#...#', '.#.#.', '..#..']);
+  const SCONCE = up(['#####', '.###.', '..#..', '..#..']);
+
+  function put(sx, sy, v) { if (sx >= 0 && sx < W && sy >= 0 && sy < H) buf[sy * W + sx] = v; }
+  // يرسم شكلاً مركزه الأفقي sxc وقاعدته syFoot على الشاشة
+  function sprite(rows, sxc, syFoot, flip, alpha) {
+    const h = rows.length, w = rows[0].length;
+    const x0 = Math.round(sxc) - (w >> 1), y0 = Math.round(syFoot) - h + 1;
+    if (alpha >= 1) {
+      for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) {
+        if (rows[r][flip ? w - 1 - c : c] === '.') continue;
+        for (let oy = -2; oy <= 2; oy++) for (let ox = -2; ox <= 2; ox++) put(x0 + c + ox, y0 + r + oy, 0);
+      }
+    }
+    for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) {
+      const ch = rows[r][flip ? w - 1 - c : c];
+      if (ch !== '.') put(x0 + c, y0 + r, ch === 'o' ? 0 : alpha);
+    }
+  }
+
+  // ---------- الفارس: هيكل بمفاصل، وكل قدم تثبت على درجتها ----------
+  const KS = 1.3, KW = 60, KH = 96, KCX = 26, KFEET = 84;
+  const L1 = 10.5, L2 = 10.5;
+  const kc = document.createElement('canvas'); kc.width = KW; kc.height = KH;
+  const kg = kc.getContext('2d', { willReadFrequently: true });
+  function limb(x1, y1, x2, y2, w, col) {
+    kg.lineCap = 'round';
+    kg.beginPath(); kg.moveTo(x1, y1); kg.lineTo(x2, y2);
+    kg.strokeStyle = '#000'; kg.lineWidth = w + 1.9; kg.stroke();
+    kg.strokeStyle = col || '#fff'; kg.lineWidth = w; kg.stroke();
+  }
+  function shape(fill) {
+    kg.lineJoin = 'round'; kg.strokeStyle = '#000'; kg.lineWidth = 1.9; kg.stroke();
+    kg.fillStyle = fill; kg.fill();
+  }
+  function leg(hx, hy, ax, ay, col) {
+    const dx = ax - hx, dy = ay - hy;
+    const d = Math.max(4, Math.min(L1 + L2 - 0.05, Math.hypot(dx, dy)));
+    const a = Math.atan2(dy, dx);
+    const k = Math.acos(Math.max(-1, Math.min(1, (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d))));
+    const kx = hx + L1 * Math.cos(a - k), ky = hy + L1 * Math.sin(a - k);
+    limb(hx, hy, kx, ky, 4.8, col);
+    limb(kx, ky, ax, ay, 4, col);
+    limb(ax - 0.4, ay + 1.5, ax + 3.9, ay + 1.7, 2.7, col);      // الحذاء
+    kg.fillStyle = '#000'; kg.fillRect(kx - 1.6, ky - 0.5, 3.2, 1);   // واقي الركبة
+  }
+  function drawKnight(pp, speed, lit, t, blow) {
+    kg.setTransform(1, 0, 0, 1, 0, 0); kg.clearRect(0, 0, KW, KH);
+    kg.setTransform(KS, 0, 0, KS, KCX, KFEET);
+    const TW = TREAD_PX / KS, RZ = RISE_PX / KS;
+    const j = Math.round(pp), f = pp - j;                         // f بين -0.5 و 0.5
+    // القدم الثابتة على الدرجة j تنزلق مع الدرجة، والأخرى تتأرجح إلى الدرجة التالية
+    const stX = -f * TW, stY = f * RZ - 2.6;
+    const tt = f + 0.5, e = tt * tt * (3 - 2 * tt);
+    const swX = (e - 0.5) * TW, swY = -(tt - 0.5) * RZ - Math.sin(Math.PI * tt) * 4.4 - 2.6;
+    const nearStance = (j & 1) === 0;
+    const idle = speed < 0.3 ? Math.sin(t * 2.2) * 0.5 : 0;
+    const hy = -17.3 + Math.abs(f) * 3 + idle;
+    const lean = Math.min(0.17, speed * 0.028);
+    const wave = Math.sin(t * 7) * blow;
+
+    // الساق البعيدة ثم القريبة
+    if (nearStance) { leg(-1, hy, swX, swY, '#808080'); leg(1, hy, stX, stY, '#fff'); }
+    else { leg(-1, hy, stX, stY, '#808080'); leg(1, hy, swX, swY, '#fff'); }
+
+    kg.save(); kg.translate(0, hy); kg.rotate(lean);
+    // العباءة تتطاير مع السرعة
+    kg.beginPath();
+    kg.moveTo(-1, -13.2); kg.lineTo(-5, -13.6);
+    kg.quadraticCurveTo(-9 - blow * 4, -6, -11 - blow * 7, 3.5 - blow * 5 + wave * 1.3);
+    kg.lineTo(-5.5 - blow * 4, 5.5 - blow * 2 - wave);
+    kg.quadraticCurveTo(-3, -3, -1, -13.2); kg.closePath();
+    shape('#808080');
+    // الترس على الظهر
+    kg.beginPath(); kg.ellipse(-6.6, -6.8, 4.4, 6.8, 0.08, 0, TAU); shape('#fff');
+    kg.beginPath(); kg.ellipse(-6.6, -6.8, 2.5, 4.6, 0.08, 0, TAU); kg.strokeStyle = '#808080'; kg.lineWidth = 1.2; kg.stroke();
+    kg.fillStyle = '#000'; kg.beginPath(); kg.arc(-6.6, -6.8, 1.2, 0, TAU); kg.fill();
+    // الصدر
+    kg.beginPath();
+    kg.moveTo(-5.2, 1.2); kg.lineTo(-5.8, -9); kg.quadraticCurveTo(-5.8, -14.2, -2, -14.4);
+    kg.lineTo(3.5, -14.4); kg.quadraticCurveTo(6.6, -14, 6.4, -10); kg.lineTo(5.6, 1.2); kg.closePath();
+    shape('#fff');
+    kg.fillStyle = '#808080'; kg.fillRect(-4.6, -11.5, 2.2, 9);
+    kg.fillStyle = '#000';
+    kg.fillRect(0.6, -12.6, 1.5, 6.6); kg.fillRect(-1.4, -10.7, 5.6, 1.5);     // الشارة
+    // صفائح الخصر والحزام
+    kg.beginPath(); kg.moveTo(-5.4, -1.4); kg.lineTo(-0.3, -1.4); kg.lineTo(-0.7, 4.2); kg.lineTo(-5.7, 3.4); kg.closePath(); shape('#fff');
+    kg.beginPath(); kg.moveTo(0.3, -1.4); kg.lineTo(5.8, -1.4); kg.lineTo(6.2, 3.4); kg.lineTo(0.7, 4.2); kg.closePath(); shape('#fff');
+    kg.fillStyle = '#000'; kg.fillRect(-5.6, -2.9, 11.6, 1.7);
+    // الريشة
+    kg.beginPath();
+    kg.moveTo(0.6, -27.8);
+    kg.quadraticCurveTo(-8 - blow * 3, -35.5, -13 - blow * 5, -24 + wave * 1.5);
+    kg.quadraticCurveTo(-6, -29.5, -1.2, -25.8); kg.closePath();
+    shape('#808080');
+    // الخوذة
+    kg.beginPath(); kg.arc(1.2, -21.2, 6.6, 0, TAU); shape('#fff');
+    kg.fillStyle = '#808080'; kg.fillRect(-4.6, -24, 2.3, 5.6);
+    kg.fillStyle = '#000';
+    kg.fillRect(0.4, -23, 7.8, 2.2);                              // فتحة العينين
+    kg.fillRect(0.7, -27.6, 1.3, 4.6);                            // حرف الخوذة
+    kg.fillRect(3.2, -19, 1.2, 1.2); kg.fillRect(5.2, -19, 1.2, 1.2);
+    kg.fillRect(-3.8, -15.7, 10, 1.4);                            // طوق الرقبة
+    // الذراع والكتف
+    const ab = Math.sin(pp * Math.PI) * 0.8;
+    limb(3.6, -11.5, 8.2, -7.6 + ab, 3.5); limb(8.2, -7.6 + ab, 11.6, -13 + ab, 3.5);
+    kg.beginPath(); kg.arc(3.2, -12, 3.9, 0, TAU); shape('#fff');
+    kg.beginPath(); kg.arc(3.2, -12, 2.1, Math.PI, TAU); kg.strokeStyle = '#808080'; kg.lineWidth = 1.1; kg.stroke();
+    // المشعل
+    limb(11.6, -11.4 + ab, 11.6, -25.4 + ab, 1.6);
+    kg.fillStyle = '#000'; kg.fillRect(8.9, -28.8 + ab, 5.4, 4);
+    kg.fillStyle = '#fff'; kg.fillRect(9.9, -27.8 + ab, 3.4, 2);
+    if (lit) {
+      const fl = reduceMotion ? 0 : Math.sin(t * 17) * 1.1 + Math.sin(t * 9.1) * 0.8;
+      const bend = (reduceMotion ? 0 : Math.sin(t * 6) * 1.1) - Math.min(3.4, speed * 0.6);
+      const bx = 11.6, by = -28.8 + ab, hh = 10.5 + fl;
+      kg.beginPath();
+      kg.moveTo(bx + bend, by - hh);
+      kg.quadraticCurveTo(bx + 5, by - 4.6, bx + 3.1, by - 0.5);
+      kg.quadraticCurveTo(bx, by + 1.5, bx - 3.1, by - 0.5);
+      kg.quadraticCurveTo(bx - 5, by - 4.6, bx + bend, by - hh); kg.closePath();
+      shape('#fff');
+      kg.fillStyle = '#000'; kg.beginPath(); kg.ellipse(bx, by - 2.8, 1.1, 2.1, 0, 0, TAU); kg.fill();
+    }
+    kg.restore();
+  }
+  function blitKnight(sxc, syFeet) {
+    const d = kg.getImageData(0, 0, KW, KH).data;
+    for (let pass = 0; pass < 2; pass++) for (let r = 0, i = 3; r < KH; r++) for (let c = 0; c < KW; c++, i += 4) {
+      if (d[i] < 110) continue;
+      const sx = sxc + c - KCX, sy = syFeet - (KFEET - r);
+      if (pass === 0) { put(sx - 1, sy, 0); put(sx + 1, sy, 0); put(sx, sy - 1, 0); put(sx, sy + 1, 0); }
+      else { const l = d[i - 3]; put(sx, sy, l < 70 ? 0 : l < 190 ? 0.5 : 1); }
+    }
+  }
+
+  // ---------- الصوت والموسيقى ----------
+  let ac = null, master = null, musicBus = null, noiseBuf = null, muted = false, musicTimer = 0;
+  try { muted = localStorage.getItem('suood-mute') === '1'; } catch (e) { muted = false; }
+  muteEl.setAttribute('aria-pressed', String(muted));
+  function audioInit() {
+    if (ac) { if (ac.state === 'suspended') ac.resume().catch(() => {}); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try {
+      ac = new AC({ latencyHint: 'interactive' });               // أقل تأخير ممكن للمؤثرات
+      master = ac.createGain(); master.gain.value = muted ? 0 : 0.9; master.connect(ac.destination);
+      musicBus = ac.createGain(); musicBus.gain.value = 0.6; musicBus.connect(master);
+      noiseBuf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      // ريح خافتة حول البرج
+      const n = ac.createBufferSource(); n.buffer = noiseBuf; n.loop = true;
+      const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 300;
+      const g = ac.createGain(); g.gain.value = 0.06;
+      n.connect(lp); lp.connect(g); g.connect(master); n.start();
+      const lfo = ac.createOscillator(); lfo.frequency.value = 0.08;
+      const lg = ac.createGain(); lg.gain.value = 150;
+      lfo.connect(lg); lg.connect(lp.frequency); lfo.start();
+      ac.resume().catch(() => {});
+    } catch (e) { ac = null; }
+  }
+  function tone(type, f0, f1, dur, vol, delay) {
+    if (!ac || muted) return;
+    try {
+      const t = ac.currentTime + (delay || 0);
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type; o.frequency.setValueAtTime(f0, t);
+      if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.03);
+    } catch (e) { /* تجاهل */ }
+  }
+  function noise(kind, freq, dur, vol) {
+    if (!ac || muted) return;
+    try {
+      const t = ac.currentTime;
+      const n = ac.createBufferSource(); n.buffer = noiseBuf;
+      const f = ac.createBiquadFilter(); f.type = kind; f.frequency.value = freq; f.Q.value = 0.9;
+      const g = ac.createGain();
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      n.connect(f); f.connect(g); g.connect(master);
+      n.start(t, Math.random()); n.stop(t + dur + 0.03);
+    } catch (e) { /* تجاهل */ }
+  }
+  const thud = (freq, dur, vol) => noise('lowpass', freq, dur, vol);
+  const footstep = odd => noise('bandpass', odd ? 1500 : 1900, 0.045, 0.05);   // خطوة خفيفة
+  const buzz = ms => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* تجاهل */ } };
+
+  // لحن أصلي بإيقاع الفالس: صندوق موسيقى ثم مزمار هادئ فوق مرافقة وترية
+  const NT = { A2: 110, Bb2: 116.54, C3: 130.81, D3: 146.83, F3: 174.61, G3: 196, A3: 220, Bb3: 233.08, C4: 261.63, Cs4: 277.18,
+    D4: 293.66, E4: 329.63, F4: 349.23, G4: 392, A4: 440, Bb4: 466.16, C5: 523.25, Cs5: 554.37, D5: 587.33, E5: 659.26, F5: 698.46 };
+  const CHORD = {
+    Dm: ['D3', ['A3', 'D4', 'F4']], Gm: ['G3', ['Bb3', 'D4', 'G4']], C: ['C3', ['G3', 'C4', 'E4']],
+    F: ['F3', ['A3', 'C4', 'F4']], Bb: ['Bb2', ['Bb3', 'D4', 'F4']], A7: ['A2', ['G3', 'Cs4', 'E4']]
+  };
+  const BARS = [
+    ['Dm', 'A4', 1.5, 'D5', 0.5, 'F5', 1], ['Gm', 'D5', 2, 'Bb4', 1], ['C', 'E5', 1.5, 'C5', 0.5, 'G4', 1], ['F', 'A4', 3],
+    ['Bb', 'Bb4', 1, 'D5', 1, 'F5', 1], ['Gm', 'D5', 2, 'Bb4', 1], ['A7', 'A4', 1, 'Cs5', 1, 'E5', 1], ['Dm', 'D5', 3],
+    ['Dm', 'F5', 1.5, 'E5', 0.5, 'D5', 1], ['Gm', 'Bb4', 2, 'G4', 1], ['C', 'C5', 1, 'D5', 1, 'E5', 1], ['F', 'F5', 2, 'C5', 1],
+    ['Bb', 'D5', 1.5, 'C5', 0.5, 'Bb4', 1], ['Gm', 'G4', 1, 'Bb4', 1, 'D5', 1], ['A7', 'Cs5', 2, 'E5', 1], ['Dm', 'D5', 3]
+  ];
+  const BEAT = 0.62;
+  let barIdx = 0, barTime = 0;
+  function pluck(freq, t, dur, vol) {
+    const o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), g2 = ac.createGain();
+    o.type = 'triangle'; o.frequency.value = freq; o2.type = 'sine'; o2.frequency.value = freq * 2;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0006, t + dur);
+    g2.gain.value = 0.3;
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(musicBus);
+    o.start(t); o2.start(t); o.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
+  }
+  function reed(freq, t, dur, vol) {
+    const o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+    const lfo = ac.createOscillator(), lg = ac.createGain();
+    o.type = 'square'; o.frequency.value = freq; f.type = 'lowpass'; f.frequency.value = 1150;
+    lfo.frequency.value = 5.2; lg.gain.value = freq * 0.006; lfo.connect(lg); lg.connect(o.frequency);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.07);
+    g.gain.setValueAtTime(vol, t + Math.max(0.08, dur - 0.14)); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    o.connect(f); f.connect(g); g.connect(musicBus);
+    o.start(t); lfo.start(t); o.stop(t + dur + 0.05); lfo.stop(t + dur + 0.05);
+  }
+  function scheduleBar(idx, t0) {
+    const bar = BARS[idx % 16], ch = CHORD[bar[0]], section = Math.floor(idx / 16) % 3;
+    pluck(NT[ch[0]], t0, BEAT * 2.6, 0.13);
+    for (let b = 1; b <= 2; b++) for (const nme of ch[1]) pluck(NT[nme], t0 + b * BEAT, BEAT * 1.1, 0.03);
+    if (section === 2) { if (idx % 2 === 0) pluck(NT[ch[1][2]] * 2, t0, BEAT * 2.8, 0.05); return; }
+    let t = t0;
+    for (let i = 1; i < bar.length; i += 2) {
+      const dur = bar[i + 1] * BEAT;
+      if (section === 0) pluck(NT[bar[i]], t, Math.max(0.9, dur * 1.5), 0.12);
+      else reed(NT[bar[i]], t, dur * 0.96, 0.05);
+      t += dur;
+    }
+  }
+  function startMusic() {
+    if (!ac || musicTimer) return;
+    barTime = ac.currentTime + 0.12;
+    const tick = () => {
+      if (!ac || ac.state !== 'running') return;
+      if (barTime < ac.currentTime - 1) barTime = ac.currentTime + 0.1;
+      try { while (barTime < ac.currentTime + 0.5) { scheduleBar(barIdx++, barTime); barTime += 3 * BEAT; } } catch (e) { /* تجاهل */ }
+    };
+    tick();
+    musicTimer = setInterval(tick, 140);
+  }
+  muteEl.addEventListener('click', () => {
+    muted = !muted;
+    muteEl.setAttribute('aria-pressed', String(muted));
+    try { localStorage.setItem('suood-mute', muted ? '1' : '0'); } catch (e) { /* تجاهل */ }
+    audioInit();
+    if (master) master.gain.value = muted ? 0 : 0.9;
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (!ac) return;
+    if (document.hidden) ac.suspend().catch(() => {}); else ac.resume().catch(() => {});
+  });
+
+  // ---------- الحالة ----------
+  let p = 0, vel = 0, time = 0;
+  let mode = 'title';             // title | play | dead
+  let lives = 3, stars = 0, deadAt = 0;
+  let reached = 0;
+  let hurtUntil = 0, shake = 0, nextRock = 0, nextStar = 0, nextBat = 5, lastStepAt = 0, lastFoot = 0;
+  const things = [], bits = [], bats = [], motes = [];
+  let best = 0;
+  try { best = parseInt(localStorage.getItem('suood-best') || '0', 10) || 0; } catch (e) { best = 0; }
+  const num = n => n.toLocaleString('ar-EG');
+
+  const FLAME_SVG = '<svg viewBox="-1 -1 12 16" aria-hidden="true"><path d="M5 0C6 4 10 5 10 9a5 5 0 0 1-10 0C0 6 3 5 5 0Z"/></svg>';
+  function drawLives() {
+    livesEl.innerHTML = [0, 1, 2].map(i => i < lives ? FLAME_SVG : FLAME_SVG.replace('<svg', '<svg class="out"')).join('');
+    livesEl.setAttribute('aria-label', 'الشعلات الباقية ' + num(lives));
+  }
+  function showHint(title, lines) {
+    hintEl.textContent = '';
+    if (title) { const b = document.createElement('b'); b.textContent = title; hintEl.appendChild(b); }
+    lines.forEach((t, i) => {
+      const sm = document.createElement('small'); sm.textContent = t;
+      if (i === lines.length - 1) sm.className = 'go';
+      hintEl.appendChild(sm);
+    });
+    hintEl.classList.remove('gone');
+  }
+  let bannerTimer = 0;
+  function banner(text) {
+    bannerEl.textContent = text; bannerEl.classList.add('on');
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => bannerEl.classList.remove('on'), 2600);
+  }
+  let shownFloor = -1;
+  function onFloor(k) {
+    if (k === shownFloor) return;
+    shownFloor = k;
+    floorEl.textContent = 'الطابق ' + num(k);
+    if (k > best) { best = k; try { localStorage.setItem('suood-best', String(best)); } catch (e) { /* تجاهل */ } }
+    if (k > reached) {
+      reached = k;
+      if (k % ZONE_LEN === 0) banner(ZONES[zoneOf(k)]);
+      if (k % CP_EVERY === 0) {
+        // الموقد يعيد الشعلات كلها
+        if (k % ZONE_LEN !== 0) banner('أُشعل الموقد');
+        lives = 3; drawLives();
+        liveEl.textContent = 'أُشعل موقد الطابق ' + num(k) + ' وعادت شعلاتك';
+        tone('sine', 392, 0, 0.5, 0.07); tone('sine', 523, 0, 0.5, 0.07, 0.12); tone('sine', 784, 0, 0.8, 0.07, 0.24);
+      }
+    }
+  }
+  function relight() {
+    // يكمل من مكانه ولا يعود إلى الوراء
+    lives = 3; stars = 0; starsEl.textContent = '✦ ' + num(0); vel = 0;
+    things.length = 0;
+    hurtUntil = time + 2.5; nextRock = time + 4; nextStar = time + 3;
+    mode = 'play'; drawLives(); hintEl.classList.add('gone');
+    if (musicBus) musicBus.gain.value = 0.6;
+  }
+  drawLives();
+  starsEl.textContent = '✦ ' + num(0);
+  recordEl.textContent = best > 0 ? 'أعلى طابق بلغته: ' + num(best) : '';
+
+  playEl.addEventListener('click', () => {
+    if (mode !== 'title') return;
+    audioInit(); startMusic();
+    document.body.classList.remove('title');
+    startEl.classList.add('hide');
+    mode = 'play';
+    nextRock = time + 6; nextStar = time + 4;
+    showHint('', ['اسحب أو اضغط مطوّلاً لتصعد']);
+    banner(ZONES[0]);
+    try { stage.focus({ preventScroll: true }); } catch (e) { /* تجاهل */ }
+  });
+
+  // ---------- التحكّم: كل حركة تدير البرج إلى الأمام فقط ----------
+  let pointerDown = false, dragMode = false, downAt = 0, moved = 0, lastX = 0, lastY = 0, lastT = 0;
+  const keys = new Set();
+  const HOLD_SPEED = 4.4;
+  function advance(d) {
+    if (mode !== 'play' || !(d > 0)) return;
+    p += d;
+    if (p > 2) hintEl.classList.add('gone');
+  }
+  const tryRelight = () => { if (mode === 'dead' && time - deadAt > 0.8) relight(); };
+  stage.addEventListener('pointerdown', e => {
+    audioInit(); tryRelight();
+    pointerDown = true; dragMode = false; moved = 0; downAt = performance.now();
+    lastX = e.clientX; lastY = e.clientY; lastT = downAt; vel = 0;
+    try { stage.setPointerCapture(e.pointerId); } catch (err) { /* تجاهل */ }
+  });
+  stage.addEventListener('pointermove', e => {
+    if (!pointerDown) return;
+    const now = performance.now();
+    const dist = Math.hypot(lastX - e.clientX, lastY - e.clientY);
+    moved += dist;
+    if (!dragMode && moved > 10) dragMode = true;
+    if (dragMode) {
+      const d = dist / (TREAD_PX * PXC);                        // البرج يتبع الإصبع
+      const dt = Math.max(1, now - lastT) / 1000;
+      vel = vel * 0.6 + (d / dt) * 0.4;
+      advance(d);
+    }
+    lastX = e.clientX; lastY = e.clientY; lastT = now;
+  });
+  const endPointer = () => { pointerDown = false; if (!dragMode || performance.now() - lastT > 90) vel = 0; };
+  stage.addEventListener('pointerup', endPointer);
+  stage.addEventListener('pointercancel', endPointer);
+  stage.addEventListener('wheel', e => { e.preventDefault(); advance(Math.min(2, (Math.abs(e.deltaY) + Math.abs(e.deltaX)) / 80)); }, { passive: false });
+  window.addEventListener('keydown', e => {
+    if (['ArrowUp', 'ArrowRight', ' ', 'w', 'd', 'Enter'].includes(e.key)) {
+      if (e.target === muteEl || e.target === playEl) return;
+      if (mode === 'title') return;
+      audioInit(); tryRelight(); keys.add(e.key); e.preventDefault();
+    }
+  });
+  window.addEventListener('keyup', e => keys.delete(e.key));
+  window.addEventListener('blur', () => { keys.clear(); pointerDown = false; });
+
+  // ---------- الأشياء الساقطة ----------
+  function burst(sx, Y, n, speed) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI;
+      bits.push({ x: sx, Y, vx: Math.cos(a) * speed * (0.4 + Math.random()), vy: Math.sin(a) * speed * (0.4 + Math.random()), g: 440, life: 0.4 + Math.random() * 0.5, big: 1 });
+    }
+  }
+  function spawn(kind, topW, speed) {
+    // الصخرة تستهدف المكان الذي سيبلغه الفارس لو واصل بسرعته
+    const lead = kind === 'rock' ? Math.max(3, Math.min(22, speed * 2.2)) + Math.random() * 3 : 5 + speed + Math.random() * 8;
+    const q = Math.round(p + lead), ty = q * SH;
+    const y = Math.max(topW + 14, ty + 120);
+    things.push({ kind, q, y, ty, vy: kind === 'rock' ? (y - ty) / 1.3 : 44, wait: kind === 'rock' ? 0.9 : 0, rest: 0, v: Math.random() < 0.5 ? 0 : 1 });
+  }
+  function hit() {
+    lives--; drawLives();
+    hurtUntil = time + 2; shake = 0.3; vel = 0;
+    thud(900, 0.25, 0.5); tone('sawtooth', 220, 60, 0.35, 0.12); buzz(120);
+    if (lives <= 0) {
+      mode = 'dead'; deadAt = time;
+      if (musicBus) musicBus.gain.value = 0.25;
+      showHint('انطفأت الشعلة', [
+        'بلغت الطابق ' + num(Math.floor(p / N)) + '، وأعلى ما وصلته ' + num(best),
+        'اضغط لتشعلها وتكمل من مكانك'
+      ]);
+      liveEl.textContent = 'انطفأت الشعلة';
+    } else liveEl.textContent = 'أصابتك صخرة. بقي ' + num(lives);
+  }
+
+  // ---------- الإضاءة والمضلعات ----------
+  const lights = [];              // x, y, d, R, R2 لكل مصدر
+  let nl = 0;
+  function lightAt(wx, wy, wd) {
+    let l = 0;
+    for (let q = 0; q < nl; q += 5) {
+      const dx = wx - lights[q], dy = wy - lights[q + 1], dd = wd - lights[q + 2];
+      const d2 = dx * dx + dy * dy + dd * dd;
+      if (d2 < lights[q + 4]) { const ll = 1 - Math.sqrt(d2) / lights[q + 3]; if (ll > l) l = ll; }
+    }
+    if (l <= 0) return 0;
+    l = l * (2 - l) * 1.9;
+    return l > 1 ? 1 : l;
+  }
+  let camTopB = 0, cam = 0;
+  // يملأ مضلعاً محدّباً بمادة m ويضيئه
+  function fillPoly(pts, m, yf, df, ml, vert) {
+    let minY = Infinity, maxY = -Infinity;
+    const n = pts.length;
+    for (let i = 1; i < n; i += 2) { if (pts[i] < minY) minY = pts[i]; if (pts[i] > maxY) maxY = pts[i]; }
+    const y0 = Math.max(0, Math.ceil(minY - 0.5)), y1 = Math.min(H - 1, Math.ceil(maxY - 0.5) - 1);
+    for (let y = y0; y <= y1; y++) {
+      const yc = y + 0.5;
+      let xL = Infinity, xR = -Infinity;
+      for (let i = 0; i < n; i += 2) {
+        const xa = pts[i], ya = pts[i + 1], j = (i + 2) % n, xb = pts[j], yb = pts[j + 1];
+        if ((ya <= yc && yb > yc) || (yb <= yc && ya > yc)) {
+          const x = xa + (yc - ya) / (yb - ya) * (xb - xa);
+          if (x < xL) xL = x; if (x > xR) xR = x;
+        }
+      }
+      const xs = Math.max(0, Math.ceil(xL - 0.5)), xe = Math.min(W - 1, Math.ceil(xR - 0.5) - 1);
+      const wy = vert ? (camTopB - y) / S + df * TILT : yf;
+      for (let x = xs, i = y * W + xs; x <= xe; x++, i++) {
+        const l = lightAt((x - cx) / S, wy, df) + ml;
+        buf[i] = m * (l > 1 ? 1 : l);
+      }
+    }
+  }
+  function drawStep(i) {
+    const y = i * SH, ac = i * DA - cam, a0 = ac - DA / 2, a1 = ac + DA / 2;
+    const s0 = Math.sin(a0), c0 = Math.cos(a0), s1 = Math.sin(a1), c1 = Math.cos(a1), cm = Math.cos(ac);
+    const base = camTopB - y * S, th = TH * S, lip = 3, RI = RW - 1, RN = RW + 4, RE = RS - 3;
+    const ix0 = cx + RI * s0 * S, iy0 = base + RI * c0 * TS, ox0 = cx + RS * s0 * S, oy0 = base + RS * c0 * TS;
+    const ix1 = cx + RI * s1 * S, iy1 = base + RI * c1 * TS, ox1 = cx + RS * s1 * S, oy1 = base + RS * c1 * TS;
+    const nx0 = cx + RN * s0 * S, ny0 = base + RN * c0 * TS, nx1 = cx + RN * s1 * S, ny1 = base + RN * c1 * TS;
+    const ex0 = cx + RE * s0 * S, ey0 = base + RE * c0 * TS, ex1 = cx + RE * s1 * S, ey1 = base + RE * c1 * TS;
+    const mid = (RW + RS) / 2, tone = 0.84 + hash(i * 97 + 3) * 0.1;
+    // القائمتان الجانبيتان (ما يواجه الناظر منهما)
+    if (s0 > 0) fillPoly([ix0, iy0, ox0, oy0, ox0, oy0 + th, ix0, iy0 + th], 0.7, y, mid * c0, Math.max(0, Math.cos(a0 + cam - Math.PI / 2 - MOON_A)) * 0.3, true);
+    if (s1 < 0) fillPoly([ix1, iy1, ox1, oy1, ox1, oy1 + th, ix1, iy1 + th], 0.7, y, mid * c1, Math.max(0, Math.cos(a1 + cam + Math.PI / 2 - MOON_A)) * 0.3, true);
+    // الحافة الخارجية: شفة فاتحة فوق جسم أغمق
+    if (cm > -0.2) {
+      const mlr = Math.max(0, Math.cos(ac + cam - MOON_A)) * 0.3;
+      fillPoly([ox0, oy0 + lip, ox1, oy1 + lip, ox1, oy1 + th, ox0, oy0 + th], 0.42, y, RS * cm, mlr, true);
+      fillPoly([ox0, oy0, ox1, oy1, ox1, oy1 + lip, ox0, oy0 + lip], 0.72, y, RS * cm, mlr, true);
+    }
+    // السطح: ظل عند الجدار، بلاطة، ثم حافة لامعة
+    fillPoly([ix0, iy0, nx0, ny0, nx1, ny1, ix1, iy1], 0.45, y, RW * cm, 0.1, false);
+    fillPoly([nx0, ny0, ex0, ey0, ex1, ey1, nx1, ny1], tone, y, mid * cm, 0.22, false);
+    fillPoly([ex0, ey0, ox0, oy0, ox1, oy1, ex1, ey1], 1, y, RS * cm, 0.3, false);
+    // فاصل بين بلاطتي السطح
+    const RJ = RW + 11, jw = 0.45;
+    fillPoly([cx + (RJ - jw) * s0 * S, base + (RJ - jw) * c0 * TS, cx + (RJ + jw) * s0 * S, base + (RJ + jw) * c0 * TS,
+      cx + (RJ + jw) * s1 * S, base + (RJ + jw) * c1 * TS, cx + (RJ - jw) * s1 * S, base + (RJ - jw) * c1 * TS], tone * 0.62, y, RJ * cm, 0.14, false);
+  }
+  // دعامة مثلثة تحمل الدرجة، تظهر من الجانب
+  function drawCorbel(i) {
+    const y = i * SH, ac = i * DA - cam, sm = Math.sin(ac), cm = Math.cos(ac);
+    if (Math.abs(sm) < 0.25) return;
+    const base = camTopB - (y - TH) * S;
+    const ax = cx + RW * sm * S, ay = base + RW * cm * TS;
+    const bx = cx + (RW + 11) * sm * S, by = base + (RW + 11) * cm * TS;
+    fillPoly(sm > 0 ? [ax, ay, bx, by, ax, ay + 20] : [bx, by, ax, ay, ax, ay + 20], 0.6, y - TH, (RW + 5) * cm, 0.16, true);
+  }
+
+  // هالة ناعمة حول اللهب
+  function glow(sxc, syc, rad, strength) {
+    const x0 = Math.max(0, Math.floor(sxc - rad)), x1 = Math.min(W - 1, Math.ceil(sxc + rad));
+    const y0 = Math.max(0, Math.floor(syc - rad)), y1 = Math.min(H - 1, Math.ceil(syc + rad));
+    for (let y = y0; y <= y1; y++) for (let x = x0, i = y * W + x0; x <= x1; x++, i++) {
+      const d = Math.hypot(x - sxc, y - syc) / rad;
+      if (d < 1) { const v = strength * (1 - d) * (1 - d); if (v > buf[i]) buf[i] = v; }
+    }
+  }
+
+  // ---------- الإطار ----------
+  const INK = [0xec, 0xe6, 0xfb];
+  let prev = performance.now(), lastP = 0, spd = 0, capeBlow = 0;
+  const stepList = [];
+  const cl = new Float32Array(64);
+
+  function frame(now) {
+    const dt = Math.min(0.05, (now - prev) / 1000); prev = now; time += dt;
+
+    if (mode === 'play') {
+      const holding = pointerDown && !dragMode && now - downAt > 130;
+      if (holding) advance(HOLD_SPEED * dt);
+      else if (!pointerDown && vel > 0.05) {
+        vel = Math.min(11, vel);
+        advance(vel * dt);
+        vel *= Math.pow(0.05, dt);
+      }
+      if (keys.size) advance(4.8 * dt);
+    }
+    spd = spd * 0.85 + ((p - lastP) / Math.max(dt, 0.001)) * 0.15; lastP = p;
+    capeBlow += (Math.min(1, spd / 5) - capeBlow) * Math.min(1, dt * 5);
+
+    const meY = p * SH, floor = Math.floor(p / N);
+    if (mode !== 'title') onFloor(floor);
+    cam = p * DA;
+
+    // الكاميرا ثابتة على الفارس وتصعد بانسياب، والبرج هو الذي يدور
+    let shx = 0, shy = 0;
+    if (shake > 0) { shake -= dt; if (!reduceMotion) { shx = Math.round(Math.random() * 6 - 3); shy = Math.round(Math.random() * 6 - 3); } }
+    const feetY = Math.round(meY * S - RM * TS);
+    camTopB = feetY + Math.round(H * 0.62) + shy;
+    const feetSy = camTopB - feetY;
+    const topW = (camTopB + RM * TS) / S, botW = topW - H / S;
+    const VX = (r, a) => cx + r * Math.sin(a - cam) * S + shx;
+    const VY = (r, a, y) => camTopB - (y * S - r * Math.cos(a - cam) * TS);
+
+    // كل قدم تحطّ على درجة: صوت خفيف وغبار
+    const footNow = Math.floor(p + 0.5);
+    if (footNow !== lastFoot) {
+      lastFoot = footNow;
+      if (time - lastStepAt > 0.1) {
+        lastStepAt = time;
+        footstep(footNow & 1);
+        bits.push({ x: cx + 12, Y: feetY + 6, vx: -24, vy: 14, g: 80, life: 0.22, big: 0 });
+      }
+    }
+
+    // مصادر الضوء: المشعل، المواقد، مشاعل الجدار
+    const flick = reduceMotion ? 0 : Math.sin(time * 13) * 2 + Math.sin(time * 7.3) * 1.6;
+    const fade = mode === 'dead' ? Math.max(0.2, 1 - (time - deadAt) * 1.2) : 1;
+    const R = (Math.min(108, Math.max(72, W / S * 0.72)) + flick) * fade;
+    const tx = 7.5, ty = meY + 30, td = RM + 2;
+    lights.length = 0;
+    lights.push(tx, ty, td, R, R * R);
+    const braziers = [], sconces = [];
+    for (let m = CP_EVERY; ; m += CP_EVERY) {
+      const y = m * REV;
+      if (y > topW + 30) break;
+      if (y < botW - 60) continue;
+      const lit = m <= reached, c = Math.cos(-cam);
+      braziers.push({ y, lit, c });
+      if (lit && c > -0.3) { const r = 56 - flick; lights.push((RW + 7) * Math.sin(-cam), y + 16, (RW + 7) * c, r, r * r); }
+    }
+    for (let i = Math.ceil((botW / SH - N / 2) / N) * N + N / 2; i * SH < topW; i += N) {
+      if (i < N / 2) continue;
+      const a = i * DA, c = Math.cos(a - cam);
+      if (c < 0.05) continue;
+      const y = i * SH + 46;
+      sconces.push({ a, y });
+      const r = 34 + flick * 0.5;
+      lights.push((RW + 4) * Math.sin(a - cam), y + 5, (RW + 4) * c, r, r * r);
+    }
+    nl = lights.length;
+
+    // حركة الصخور والنجوم
+    if (mode === 'play') {
+      if (time > nextRock && p > 8) {
+        spawn('rock', topW, spd);
+        nextRock = time + Math.max(1.6, 3.6 - floor * 0.07) * (0.75 + Math.random() * 0.5);
+      }
+      if (time > nextStar) {
+        spawn(lives < 3 && Math.random() < 0.3 ? 'ember' : 'star', topW, spd);
+        nextStar = time + 3 + Math.random() * 4;
+      }
+    }
+    for (let i = things.length - 1; i >= 0; i--) {
+      const o = things[i], a = o.q * DA, rel = Math.cos(a - cam);
+      const osx = VX(RM, a), front = rel > -0.1;
+      if (o.q < p - 3) { things.splice(i, 1); continue; }           // صار خلف الفارس
+      if (o.wait > 0) {
+        o.wait -= dt;
+        if (front && Math.random() < dt * 30) bits.push({ x: osx + Math.random() * 14 - 7, Y: camTopB, vx: 0, vy: -260 - Math.random() * 120, g: 0, life: 0.6, big: 0 });
+        continue;
+      }
+      if (o.kind === 'rock') {
+        o.y -= o.vy * dt;
+        if (mode === 'play' && time > hurtUntil && Math.abs(o.q - p) < 0.7 && o.y < meY + 24 && o.y + 8 > meY) {
+          burst(osx, o.y * S - RM * rel * TS, 14, 140); things.splice(i, 1); hit(); continue;
+        }
+        if (o.y <= o.ty) {
+          if (front) burst(osx, o.ty * S - RM * rel * TS + 2, 12, 120);
+          if (front && Math.abs(o.ty - meY) < 80) { shake = Math.max(shake, 0.12); thud(260, 0.3, 0.35); tone('sine', 90, 40, 0.25, 0.18); }
+          things.splice(i, 1);
+        }
+      } else {
+        if (o.rest === 0) { o.y -= o.vy * dt; if (o.y <= o.ty + 6) { o.y = o.ty + 6; o.rest = time; } }
+        if (mode === 'play' && Math.abs(o.q - p) < 0.9 && Math.abs(o.y - (meY + 10)) < 20) {
+          burst(osx, o.y * S - RM * TS + 6, 10, 90);
+          if (o.kind === 'ember') {
+            if (lives < 3) { lives++; drawLives(); }
+            liveEl.textContent = 'عادت إليك شعلة';
+            tone('triangle', 440, 880, 0.35, 0.09);
+          } else {
+            stars++; starsEl.textContent = '✦ ' + num(stars);
+            const f0 = [659, 784, 880, 988, 1175][stars % 5];
+            tone('sine', f0, 0, 0.35, 0.08); tone('sine', f0 * 1.5, 0, 0.45, 0.05, 0.07);
+            if (stars % 3 === 0 && lives < 3) { lives++; drawLives(); liveEl.textContent = 'عادت إليك شعلة'; }
+          }
+          things.splice(i, 1);
+        }
+      }
+    }
+
+    // ---- 1: السماء والصخرة ----
+    const skyOff = cam * SKY_K, starV = Math.floor(camTopB * 0.05), cloudV = Math.floor(camTopB * 0.11);
+    const cloudOff = skyOff - (reduceMotion ? 0 : time * 5);
+    const moonX = cx + wrap(cam - (MOON_A + Math.PI)) * SKY_K, moonY = H * 0.24;
+    const MR = Math.max(22, Math.min(34, W * 0.1)), MR2 = MR * MR, HALO = MR + 18, HALO2 = HALO * HALO;
+    const twk = Math.floor(time * 3);
+    const RGX = RG * S, RGY = RG * TS;
+    const groundVisible = camTopB - H < RGY + 2;
+    for (let sy = 0, i = 0; sy < H; sy++) {
+      const Y = camTopB - sy;
+      const sr = mod(sy - starV, SKH) * PER, cr = mod(sy - cloudV, SKH) * PER;
+      for (let sx = 0; sx < W; sx++, i++) {
+        if (sx >= tx0 && sx <= tx1 && Y + colDep[sx - tx0] >= 0) continue;
+        const X = sx - cx + 0.5;
+        let v = -1;
+        if (groundVisible && Y < RGY) {
+          const e = (X / RGX) * (X / RGX);
+          if (e < 1) {
+            const ry = RGY * Math.sqrt(1 - e);
+            if (Y >= -ry) {
+              const wxg = X / S, wdg = -Y / TS, r = Math.hypot(wxg, wdg);
+              const ring = Math.floor(r / 11), segs = 6 + ring * 3;
+              const fa = mod((Math.atan2(wxg, wdg) + cam) / TAU * segs + ring * 0.37, segs);
+              const m = mod(r, 11) < 0.8 || fa - Math.floor(fa) < 0.05 ? 0.12 : 0.36 + hash(ring * 71 + Math.floor(fa) * 13) * 0.16;
+              const l = lightAt(wxg, 0, wdg) + 0.2;
+              v = m * (l > 1 ? 1 : l);
+            } else {
+              const dd = (-ry - Y) / S, wd = RG * Math.sqrt(1 - e);
+              const m = 0.26 + hash(Math.floor((X + dd * 3) / 7) * 13 + Math.floor(dd / 4) * 7) * 0.22;
+              const l = lightAt(X / S, -dd, wd) + 0.14 * (1 - e);
+              v = m * Math.max(0, 1 - dd / 95) * (l > 1 ? 1 : l);
+            }
+          }
+        }
+        if (v < 0) {
+          const dx = sx - moonX, dy = sy - moonY, dm = dx * dx + dy * dy;
+          if (dm < MR2) {
+            const c1 = (dx + MR * 0.3) * (dx + MR * 0.3) + (dy + MR * 0.25) * (dy + MR * 0.25) < MR2 * 0.06;
+            const c2 = (dx - MR * 0.32) * (dx - MR * 0.32) + (dy - MR * 0.12) * (dy - MR * 0.12) < MR2 * 0.04;
+            const c3 = (dx + MR * 0.08) * (dx + MR * 0.08) + (dy - MR * 0.48) * (dy - MR * 0.48) < MR2 * 0.03;
+            v = c1 || c2 || c3 ? 0.62 : 1;
+          } else {
+            const st = starTex[sr + mod(Math.floor(sx - skyOff), PER)];
+            v = cloudTex[cr + mod(Math.floor(sx - cloudOff), PER)] / 255;
+            if (st && v < 0.1) v = st === 255 || reduceMotion || (st + twk) % 7 ? 1 : 0;
+            if (dm < HALO2) { const hv = 0.34 * (1 - (Math.sqrt(dm) - MR) / 18); if (hv > v) v = hv; }
+          }
+        }
+        buf[i] = v;
+      }
+    }
+
+    // ---- 2: ما يقع خلف البرج ----
+    if (!reduceMotion && mode === 'play' && time > nextBat) {
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      bats.push({ x: dir > 0 ? -12 : W + 12, Y: camTopB - H * (0.1 + Math.random() * 0.5), vx: dir * (110 + Math.random() * 60), ph: Math.random() * 6 });
+      nextBat = time + 4 + Math.random() * 6;
+    }
+    for (let i = bats.length - 1; i >= 0; i--) {
+      const b = bats[i];
+      b.x += b.vx * dt; b.Y += Math.sin(time * 5 + b.ph) * 28 * dt;
+      if (b.x < -30 || b.x > W + 30) { bats.splice(i, 1); continue; }
+      sprite(BAT[Math.floor(time * 9 + b.ph) % 2], b.x, camTopB - b.Y, false, 0.9);
+    }
+    const ghosts = [];
+    for (let n = Math.max(1, Math.floor(botW / REV) - 1); n * REV < topW + 20; n++) {
+      if (hash(n * 104729 + 5) >= 0.45) continue;
+      const a = hash(n * 311 + 9) * TAU + (reduceMotion ? 0 : time * 0.12 * (n & 1 ? 1 : -1));
+      const y = n * REV + 30 + hash(n * 17) * 40 + (reduceMotion ? 0 : Math.sin(time * 1.6 + n) * 3);
+      const rel = a - cam, gx = (RS + 24) * Math.sin(rel), gd = (RS + 24) * Math.cos(rel);
+      const d = Math.hypot(gx - tx, y + 9 - ty, gd - td);
+      const al = Math.max(0, Math.min(1, (d - 30) / 34)) * 0.85;
+      if (al > 0.04) ghosts.push({ sx: cx + gx * S + shx, sy: camTopB - (y * S - gd * TS), al, back: gd < 0, flip: Math.sin(rel) > 0 });
+    }
+    for (const g of ghosts) if (g.back) sprite(GHOST, g.sx, g.sy, g.flip, g.al);
+
+    stepList.length = 0;
+    const iMin = Math.max(1, Math.floor((botW - RS * TILT * 2) / SH) - 3), iMax = Math.ceil((topW + RS * TILT) / SH) + 2;
+    for (let i = iMin; i <= iMax; i++) stepList.push(i);
+    stepList.sort((a, b) => Math.cos(a * DA - cam) - Math.cos(b * DA - cam));
+    let si = 0;
+    for (; si < stepList.length && Math.cos(stepList[si] * DA - cam) < 0; si++) { drawCorbel(stepList[si]); drawStep(stepList[si]); }
+
+    // ---- 3: سطح البرج ----
+    const ubase = mod(cam, TAU) / TAU * CU;
+    for (let sx = tx0; sx <= tx1; sx++) {
+      const k = sx - tx0;
+      const u = mod(Math.floor(ubase + colU[k]), CU);
+      const cosp = colCos[k], limbS = 0.25 + 0.75 * cosp;
+      const mc = Math.max(0, Math.cos(cam + colPhi[k] - MOON_A));
+      const ml = mc * 0.34 + mc * (1 - cosp) * (1 - cosp) * 0.6;
+      const xw = colXw[k], dw = colDw[k];
+      let nc = 0;
+      for (let q = 0; q < nl; q += 5) {
+        const dx = xw - lights[q], dd = dw - lights[q + 2], h2 = dx * dx + dd * dd;
+        if (h2 < lights[q + 4]) { cl[nc++] = h2; cl[nc++] = lights[q + 1]; cl[nc++] = lights[q + 3]; cl[nc++] = lights[q + 4]; }
+      }
+      let vi = camTopB + colDep[k];
+      let cy = Math.floor(vi / CH), chunk = getChunk(cy), rb = (vi - cy * CH) * CU + u;
+      for (let sy = 0, bi = sx; sy < H; sy++, bi += W, vi--, rb -= CU) {
+        if (vi < 0) break;
+        if (rb < 0) { cy--; chunk = getChunk(cy); rb += CH * CU; }
+        const m = chunk[rb];
+        if (m > 0) {
+          const wy = vi / S;
+          let l = 0;
+          for (let c = 0; c < nc; c += 4) {
+            const dy = wy - cl[c + 1], d2 = cl[c] + dy * dy;
+            if (d2 < cl[c + 3]) { const ll = 1 - Math.sqrt(d2) / cl[c + 2]; if (ll > l) l = ll; }
+          }
+          if (l > 0) { l = l * (2 - l) * 1.9; if (l > 1) l = 1; }
+          l = l * limbS + ml;
+          buf[bi] = m * (l > 1 ? 1 : l);
+        } else buf[bi] = m < 0 ? -m * (0.45 + 0.55 * cosp) : 0;
+      }
+    }
+
+    // ---- 4: ما يقع أمام البرج ----
+    for (const sc of sconces) {
+      const bx = VX(RW + 3, sc.a), by = VY(RW + 3, sc.a, sc.y);
+      glow(bx, by - 16, 20, 0.6);
+      sprite(SCONCE, bx, by, false, 1);
+      sprite(FLAME[reduceMotion ? 0 : Math.floor(time * 8 + sc.y) % 2], bx, by - 8, false, 1);
+    }
+    for (; si < stepList.length; si++) { drawCorbel(stepList[si]); drawStep(stepList[si]); }
+
+    for (const b of braziers) {
+      if (b.c < 0.15) continue;
+      const bx = VX(RW + 7, 0), by = VY(RW + 7, 0, b.y);
+      sprite(BRAZIER, bx, by, false, b.lit ? 1 : 0.5);
+      if (b.lit) {
+        glow(bx, by - 26, 26, 0.65);
+        sprite(FLAME[reduceMotion ? 0 : Math.floor(time * 8 + b.y) % 2], bx, by - 16, false, 1);
+        if (!reduceMotion && Math.random() < dt * 6) bits.push({ x: bx + Math.random() * 8 - 4, Y: camTopB - by + 34, vx: Math.random() * 16 - 8, vy: 32, g: 0, life: 0.8, big: 0 });
+      }
+    }
+
+    // غبار يسبح في الضوء
+    if (!reduceMotion) {
+      while (motes.length < 26) motes.push({ x: (Math.random() * 2 - 1) * 150, y: (Math.random() * 2 - 1) * 150, ph: Math.random() * 6 });
+      for (const d of motes) {
+        d.y -= 6 * dt; d.x += (Math.sin(time * 0.7 + d.ph) * 8 - spd * 6) * dt;
+        const dd = d.x * d.x + d.y * d.y;
+        if (dd > 26000) { d.x = (Math.random() * 2 - 1) * 130; d.y = (Math.random() * 2 - 1) * 130; continue; }
+        if (dd < R * R * 2.6) put(Math.round(cx + d.x), Math.round(feetSy - 60 + d.y), 0.75);
+      }
+    }
+
+    // علامات التحذير والنجوم والصخور
+    const tw = Math.floor(time * 4) % 2;
+    for (const o of things) {
+      const a = o.q * DA;
+      if (Math.cos(a - cam) < -0.1) continue;
+      const osx = VX(RM, a);
+      if (o.kind === 'rock') {
+        if (Math.floor(time * 7) % 2) sprite(MARK, osx, VY(RM, a, o.ty + 5), false, 1);
+        if (o.wait <= 0) sprite(ROCK[o.v], osx, VY(RM, a, o.y), false, 1);
+      } else {
+        const bob = o.rest && !reduceMotion ? Math.sin(time * 3) * 1.5 : 0;
+        sprite(o.kind === 'ember' ? FLAME[tw] : STAR[tw], osx, VY(RM, a, o.y + bob), false, 1);
+      }
+    }
+
+    // الفارس
+    const blink = time < hurtUntil && Math.floor(time * 12) % 2;
+    if (!blink) {
+      if (mode !== 'dead') glow(cx + shx + 15, feetSy - 68, 30 + flick, 0.7);
+      drawKnight(p, spd, mode !== 'dead', time, capeBlow);
+      blitKnight(cx + shx, feetSy);
+      if (mode !== 'dead' && !reduceMotion && Math.random() < dt * 10) {
+        bits.push({ x: cx + 15 + Math.random() * 6 - 3, Y: feetY + 70, vx: Math.random() * 16 - 8 - spd * 8, vy: 28 + Math.random() * 16, g: 0, life: 0.6 + Math.random() * 0.7, big: 0 });
+      }
+    }
+
+    for (const g of ghosts) if (!g.back) sprite(GHOST, g.sx, g.sy, g.flip, g.al);
+
+    // الشرر والحطام
+    for (let i = bits.length - 1; i >= 0; i--) {
+      const b = bits[i];
+      b.life -= dt; b.vy -= b.g * dt; b.x += b.vx * dt; b.Y += b.vy * dt;
+      if (b.life <= 0) { bits.splice(i, 1); continue; }
+      const X = Math.round(b.x), Yy = Math.round(camTopB - b.Y);
+      put(X, Yy, 1);
+      if (b.big) { put(X + 1, Yy, 1); put(X, Yy + 1, 1); put(X + 1, Yy + 1, 1); }
+    }
+
+    // ---- 5: التحويل إلى لونين بالتنقيط ----
+    const data = img.data;
+    for (let sy = 0, i = 0, o = 0; sy < H; sy++) {
+      const by = ((camTopB - sy) & 3) << 2;
+      for (let sx = 0; sx < W; sx++, i++, o += 4) {
+        const on = buf[i] > BAYER[by | (sx & 3)];
+        data[o] = on ? INK[0] : 0; data[o + 1] = on ? INK[1] : 0; data[o + 2] = on ? INK[2] : 0; data[o + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
