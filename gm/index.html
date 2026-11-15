@@ -7,28 +7,30 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=El+Messiri:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
+  /* لوحة واحدة بلونين تتبدّل مع كل مرحلة: حبر مضيء على عتمة */
   :root {
-    --void: #000000;
+    --void: #07060d;
     --ink: #ece6fb;
     --ink-dim: #a39db6;
+    --line: rgba(163, 157, 182, 0.35);
+    --veil: rgba(0, 0, 0, 0.78);
+    --display: "Aref Ruqaa", "El Messiri", "Geeza Pro", Tahoma, serif;
+    --body: "El Messiri", "Noto Sans Arabic", "Geeza Pro", "Segoe UI", Tahoma, sans-serif;
     color-scheme: dark;
     box-sizing: border-box;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --void: #000000; --ink: #ece6fb; --ink-dim: #a39db6; }
-  }
-  :root[data-theme="dark"] { --void: #000000; --ink: #ece6fb; --ink-dim: #a39db6; }
 
   *, *::before, *::after { box-sizing: inherit; }
+  [hidden] { display: none !important; }
   html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
   body {
     height: 100%;
     margin: 0;
     background: var(--void);
     color: var(--ink);
-    font-family: "El Messiri", "Noto Sans Arabic", "Geeza Pro", "Segoe UI", Tahoma, sans-serif;
+    font-family: var(--body);
     letter-spacing: 0;
     overflow: hidden;
     overscroll-behavior: none;
@@ -42,7 +44,7 @@
 
   .hud {
     position: fixed;
-    top: calc(env(safe-area-inset-top, 0px) + 14px);
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
     left: 0; right: 0;
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -52,35 +54,51 @@
     font-size: 20px;
     font-weight: 700;
     line-height: 1.2;
+    font-variant-numeric: tabular-nums;
     text-shadow: 0 0 6px var(--void), 0 0 2px var(--void);
     transition: opacity 0.5s ease;
   }
-  body.title .hud, body.title .mute { opacity: 0; pointer-events: none; }
+  body.title .hud, body.title .mute, body.title .prog { opacity: 0; pointer-events: none; }
   .hud .stars { justify-self: end; }
   .lives { display: flex; gap: 6px; direction: ltr; }
   .lives svg { width: 14px; height: 20px; fill: var(--ink); stroke: var(--ink); stroke-width: 1; }
   .lives svg.out { fill: none; stroke: var(--ink-dim); }
 
+  /* شريط المراحل: ست قطع بطول كل مرحلة، تمتلئ من اليمين */
+  .prog {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 44px);
+    left: 18px; right: 18px;
+    height: 5px;
+    display: flex; gap: 3px;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+  .prog i { position: relative; flex: var(--f, 1) 1 0; background: var(--line); overflow: hidden; }
+  .prog b { position: absolute; inset: 0; background: var(--ink); transform: scaleX(var(--v, 0)); transform-origin: right center; }
+
   .banner {
     position: fixed;
     left: 0; right: 0;
-    top: calc(env(safe-area-inset-top, 0px) + 15vh);
+    top: calc(env(safe-area-inset-top, 0px) + 13vh);
+    padding: 0 16px;
     text-align: center;
-    font-family: "Aref Ruqaa", "El Messiri", "Geeza Pro", Tahoma, sans-serif;
-    font-size: 38px;
+    font-family: var(--display);
+    font-size: 40px;
     font-weight: 700;
-    line-height: 1.4;
+    line-height: 1.35;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.9s ease;
     text-shadow: 0 0 10px var(--void), 0 0 3px var(--void);
   }
   .banner.on { opacity: 1; }
+  .banner small { display: block; font-family: var(--body); font-size: 17px; font-weight: 500; color: var(--ink-dim); }
 
   .hint {
     position: fixed;
     left: 0; right: 0;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 10vh);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 9vh);
     padding: 0 22px;
     text-align: center;
     pointer-events: none;
@@ -88,92 +106,118 @@
     transition: opacity 0.6s ease;
   }
   .hint.gone { opacity: 0; }
-  .hint b { display: block; font-family: "Aref Ruqaa", "El Messiri", "Geeza Pro", Tahoma, sans-serif; font-weight: 700; font-size: 34px; line-height: 1.4; }
-  .hint small { display: block; font-size: 18px; color: var(--ink-dim); margin-top: 6px; line-height: 1.5; }
-  .hint .go { color: var(--ink); font-weight: 700; animation: pulse 1.6s ease-in-out infinite; }
+  .hint b { display: block; font-family: var(--display); font-weight: 700; font-size: 34px; line-height: 1.4; }
+  .hint small { display: block; font-size: 18px; color: var(--ink-dim); margin-top: 6px; line-height: 1.5; text-wrap: balance; }
+  .hint .go { color: var(--ink); font-weight: 700; }
+  .hint.wait .go { animation: pulse 1.6s ease-in-out infinite; }
   @keyframes pulse { 50% { opacity: 0.35; } }
 
-  /* واجهة البداية: العنوان في الأعلى ولوحة البدء في الأسفل */
-  .start {
+  /* واجهة البداية: العنوان في الأعلى ولوحة البدء في الأسفل، والبرج ظاهر بينهما */
+  .start, .end {
     position: fixed; inset: 0;
     display: flex; flex-direction: column;
-    justify-content: space-between; align-items: center;
+    align-items: center;
     gap: 16px;
-    padding: calc(env(safe-area-inset-top, 0px) + 5vh) 20px calc(env(safe-area-inset-bottom, 0px) + 22px);
-    background: linear-gradient(to bottom,
-      rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 22%, rgba(0,0,0,0) 40%,
-      rgba(0,0,0,0) 58%, rgba(0,0,0,0.88) 68%, rgba(0,0,0,0.97) 100%);
+    padding: calc(env(safe-area-inset-top, 0px) + 4vh) 20px calc(env(safe-area-inset-bottom, 0px) + 20px);
     transition: opacity 0.7s ease, visibility 0.7s;
     overflow-y: auto;
   }
-  .start.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+  .start {
+    justify-content: space-between;
+    background: linear-gradient(to bottom,
+      rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.55) 20%, rgba(0,0,0,0) 36%,
+      rgba(0,0,0,0) 52%, rgba(0,0,0,0.86) 64%, rgba(0,0,0,0.96) 100%);
+  }
+  .start.hide, .end.hide { opacity: 0; visibility: hidden; pointer-events: none; }
   .start-head { text-align: center; animation: drop 0.9s ease both; }
   .start-panel { animation: rise 0.9s 0.15s ease both; }
   @keyframes drop { from { opacity: 0; transform: translateY(-14px); } }
   @keyframes rise { from { opacity: 0; transform: translateY(18px); } }
   .start h1 {
     margin: 0;
-    font-family: "Aref Ruqaa", "El Messiri", "Geeza Pro", Tahoma, serif;
+    font-family: var(--display);
     font-weight: 700;
-    font-size: clamp(88px, 31vw, 140px);
-    line-height: 1.2;
-    text-shadow: 0 0 26px rgba(236,230,251,0.35), 0 3px 0 var(--void);
+    font-size: clamp(84px, 30vw, 136px);
+    line-height: 1.15;
+    text-shadow: 0 0 26px var(--line), 0 3px 0 var(--void);
   }
-  .start .rule {
+  .rule {
     width: 150px; height: 9px; margin: 0 auto 10px;
-    background:
-      linear-gradient(var(--ink), var(--ink)) center / 9px 9px no-repeat,
-      linear-gradient(var(--ink-dim), var(--ink-dim)) center / 100% 1px no-repeat;
+    background: linear-gradient(var(--ink-dim), var(--ink-dim)) center / 100% 1px no-repeat;
     position: relative;
   }
-  .start .rule::after {
+  .rule::after {
     content: ""; position: absolute; left: 50%; top: 50%;
     width: 9px; height: 9px; background: var(--ink);
     transform: translate(-50%, -50%) rotate(45deg);
   }
   .start .kicker { margin: 0; font-size: 18px; font-weight: 500; color: var(--ink); text-shadow: 0 0 8px var(--void), 0 0 2px var(--void); }
 
-  .start-panel {
+  .start-panel, .end-card {
     width: min(100%, 372px);
-    padding: 18px 18px 12px;
-    background: rgba(0,0,0,0.78);
+    padding: 16px 16px 10px;
+    background: var(--veil);
     border: 1px solid var(--ink-dim);
     box-shadow: 0 0 0 4px var(--void), 0 0 0 5px var(--ink-dim);
   }
   .play {
     display: block;
-    width: 100%; min-height: 60px;
+    width: 100%; min-height: 58px;
     padding: 8px 20px;
-    font-family: "Aref Ruqaa", "El Messiri", "Geeza Pro", Tahoma, serif;
+    font-family: var(--display);
     font-weight: 700;
     font-size: 30px; line-height: 1.3;
     color: var(--void);
     background: var(--ink);
     border: 0;
     cursor: pointer;
-    transition: transform 0.12s ease, background 0.12s ease;
+    transition: transform 0.12s ease;
   }
-  .play:active { transform: scale(0.97); background: #ffffff; }
+  .play:active { transform: scale(0.97); }
   .play:focus-visible { outline: 3px solid var(--ink); outline-offset: 5px; }
-  .start .record {
-    margin: 12px 0 0; padding: 7px 10px;
-    font-size: 16px; font-weight: 700; text-align: center;
-    border: 1px dashed var(--ink-dim);
+
+  /* اختيار المرحلة */
+  .stage-name { margin: 12px 0 6px; font-size: 16px; font-weight: 700; text-align: center; }
+  .stage-name span { color: var(--ink-dim); font-weight: 500; }
+  .stages { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .chip {
+    min-height: 44px; padding: 0;
+    font-family: var(--body); font-size: 19px; font-weight: 700; line-height: 1;
+    color: var(--ink); background: transparent;
+    border: 1px solid var(--ink-dim);
+    cursor: pointer;
   }
-  .start .record:empty { display: none; }
-  .how { list-style: none; margin: 12px 0 0; padding: 0; font-size: 16px; line-height: 1.5; color: var(--ink); }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--void); border-color: var(--ink); }
+  .chip:disabled { color: var(--ink-dim); border-style: dashed; opacity: 0.55; cursor: default; }
+  .chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  .record { margin: 10px 0 0; font-size: 15px; font-weight: 700; text-align: center; color: var(--ink); }
+  .record:empty { display: none; }
+  .how { list-style: none; margin: 10px 0 0; padding: 0; font-size: 15px; line-height: 1.45; color: var(--ink); }
   .how li {
-    display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: center;
-    padding: 8px 2px; text-align: start;
-    border-top: 1px solid rgba(163,157,182,0.35);
+    display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: center;
+    padding: 6px 2px; text-align: start;
+    border-top: 1px solid var(--line);
   }
-  .how svg { width: 22px; height: 22px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .how svg { width: 20px; height: 20px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .credit {
-    margin: 4px 0 0; padding-top: 10px;
+    margin: 2px 0 0; padding-top: 8px;
     border-top: 1px solid var(--ink-dim);
     font-size: 14px; text-align: center; color: var(--ink-dim);
   }
   .credit bdi { font-weight: 700; color: var(--ink); }
+
+  /* بطاقة النهاية */
+  .end { justify-content: flex-end; background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.8) 100%); }
+  .end-card { padding: 18px 16px 16px; text-align: center; }
+  .end-card h2 { margin: 0; font-family: var(--display); font-size: 46px; font-weight: 700; line-height: 1.3; }
+  .end-sub { margin: 0 0 12px; font-size: 17px; color: var(--ink-dim); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin: 0 0 12px; border-block: 1px solid var(--line); }
+  .stats div { padding: 10px 4px; }
+  .stats div + div { border-inline-start: 1px solid var(--line); }
+  .stats dt { font-size: 13px; color: var(--ink-dim); }
+  .stats dd { margin: 2px 0 0; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .end-note { margin: 0 0 12px; font-size: 15px; color: var(--ink); min-height: 1.4em; }
 
   .mute {
     position: fixed;
@@ -196,25 +240,34 @@
   .mute[aria-pressed="true"] .off { display: inline; }
 
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  @media (max-height: 700px) {
+    .start h1 { font-size: clamp(64px, 23vw, 96px); }
+    .start, .end { padding-top: calc(env(safe-area-inset-top, 0px) + 2vh); gap: 8px; }
+    .how li { padding: 4px 2px; }
+    .play { min-height: 52px; font-size: 27px; }
+  }
+  @media (max-height: 600px) { .how { display: none; } }
   @media (max-width: 260px) {
-    .hud { font-size: 13px; padding: 0 8px; top: calc(env(safe-area-inset-top, 0px) + 8px); }
+    .hud { font-size: 13px; padding: 0 8px; top: calc(env(safe-area-inset-top, 0px) + 6px); }
+    .prog { top: calc(env(safe-area-inset-top, 0px) + 26px); left: 8px; right: 8px; height: 3px; }
     .lives svg { width: 9px; height: 13px; }
     .hint b { font-size: 20px; } .hint small { font-size: 13px; }
-    .banner { font-size: 20px; }
-    .start h1 { font-size: 52px; } .play { font-size: 20px; min-height: 44px; }
-    .start { padding-left: 8px; padding-right: 8px; } .start-panel { padding: 8px; }
-    .how, .start .kicker, .credit { display: none; }
+    .banner { font-size: 20px; } .banner small { font-size: 12px; }
+    .start h1 { font-size: 48px; } .play { font-size: 19px; min-height: 44px; }
+    .start, .end { padding-left: 8px; padding-right: 8px; } .start-panel, .end-card { padding: 8px; }
+    .how, .start .kicker, .credit, .stage-name, .record { display: none; }
+    .chip { min-height: 30px; font-size: 13px; } .stages { gap: 2px; margin-top: 6px; }
+    .end-card h2 { font-size: 24px; } .stats dd { font-size: 15px; } .stats dt { font-size: 10px; }
     .mute { display: none; }
   }
-  @media (max-height: 520px) { .how { display: none; } .start h1 { font-size: 64px; } }
   @media (prefers-reduced-motion: reduce) {
-    .hint, .banner, .start, .hud { transition: none; }
-    .hint .go, .start-head, .start-panel { animation: none; }
+    .hint, .banner, .start, .end, .hud, .prog { transition: none; }
+    .hint.wait .go, .start-head, .start-panel { animation: none; }
   }
 </style>
 </head>
 <body class="title">
-<div id="stage" tabindex="0" role="application" aria-label="لعبة صعود: اسحب لتدير البرج أو اضغط مطوّلاً لتصعد الدرج الحلزوني، وتوقّف في مكانك لتتفادى البراميل المتدحرجة وتمر من فوقك">
+<div id="stage" tabindex="0" role="application" aria-label="لعبة صعود: اضغط مطوّلاً أو اسحب لتصعد الدرج الحلزوني، انقر نقرة سريعة لتقفز، وتوقّف لتنحني. ست مراحل حتى المنارة">
   <canvas id="c"></canvas>
 </div>
 <div class="hud">
@@ -222,6 +275,7 @@
   <span class="lives" id="lives" role="img" aria-label="الشعلات الباقية ٣"></span>
   <span class="stars" id="stars">✦ ٠</span>
 </div>
+<div class="prog" id="prog" aria-hidden="true"></div>
 <div class="banner" id="banner"></div>
 <div class="hint gone" id="hint"></div>
 <button class="mute" id="mute" type="button" aria-pressed="false" aria-label="كتم الصوت">
@@ -235,17 +289,32 @@
   <header class="start-head">
     <h1>صعود</h1>
     <div class="rule" aria-hidden="true"></div>
-    <p class="kicker">برجٌ بلا نهاية وشعلة واحدة</p>
+    <p class="kicker">ست مراحل وشعلة واحدة حتى المنارة</p>
   </header>
   <div class="start-panel">
     <button class="play" id="play" type="button">ابدأ الصعود</button>
+    <p class="stage-name" id="stagename"></p>
+    <div class="stages" id="stages" role="group" aria-label="اختر المرحلة"></div>
     <p class="record" id="record"></p>
     <ul class="how">
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/></svg><span>اسحب بإصبعك أو اضغط مطوّلاً لتصعد</span></li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M7 10l5-5 5 5"/><circle cx="12" cy="19" r="2"/></svg><span>انقر نقرة سريعة للقفز فوق البراميل</span></li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="7" ry="9"/><path d="M5.5 9h13M5.5 15h13"/></svg><span>أو ارفع إصبعك للانحناء الفوري تحتها</span></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8.5"/></svg><span>اضغط مطوّلاً أو اسحب لتصعد</span></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M7 10l5-5 5 5"/><circle cx="12" cy="19" r="2"/></svg><span>انقر نقرة سريعة لتقفز إلى الأمام</span></li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h16M7 18v-4a5 5 0 0 1 10 0v4"/></svg><span>ارفع إصبعك لتتوقف وتنحني</span></li>
     </ul>
     <p class="credit">تطوير <bdi>ابوالحسن عبدالهادي 42i</bdi></p>
+  </div>
+</div>
+<div class="end hide" id="end" aria-hidden="true">
+  <div class="end-card" role="dialog" aria-labelledby="end-title">
+    <h2 id="end-title">أُضيئت المنارة</h2>
+    <p class="end-sub">بلغتَ قمة البرج</p>
+    <dl class="stats">
+      <div><dt>الزمن</dt><dd id="e-time">٠:٠٠</dd></div>
+      <div><dt>النجوم</dt><dd id="e-stars">٠</dd></div>
+      <div><dt>شعلات انطفأت</dt><dd id="e-lost">٠</dd></div>
+    </dl>
+    <p class="end-note" id="e-note"></p>
+    <button class="play" id="again" type="button">اصعد من جديد</button>
   </div>
 </div>
 <div class="sr" id="live" aria-live="polite"></div>
@@ -258,26 +327,60 @@
   const S = 2, TAU = Math.PI * 2;
   const RW = 44;                  // نصف قطر البرج
   const RS = 62;                  // طرف الدرجة الخارجي
-  const RM = 53;                  // خط سير الشخصية
+  const RM = 53;                  // خط سير المسافر
   const RG = 84;                  // نصف قطر الصخرة التي يقوم عليها البرج
   const N = 24, DA = TAU / N;     // درجات كل لفّة
   const SH = 4, REV = N * SH, TH = 6;
   const TREAD_PX = RM * DA * S, RISE_PX = SH * S;   // المسافة بين درجتين على الشاشة
   const TILT = 0.32, TS = TILT * S;
-  const ZONE_LEN = 6, CP_EVERY = 3;
   const MOON_A = 0.9;             // اتجاه ضوء القمر في العالم
-  const ZONES = ['أسفل البرج', 'جدار اللبلاب', 'برج الرموز'];
-  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => (v + 0.5) / 16);
+  const SUN_A = MOON_A + 2.6;     // اتجاه الفجر
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // ---------- المراحل الست ----------
+  // haz: أوزان [براميل، غربان، سواقط]  ·  every: الفاصل بين العقبات بالثواني
+  const STAGES = [
+    { name: 'أسفل البرج', floors: 5, tip: 'براميل تتدحرج: انقر لتقفز فوقها، أو توقّف لتنحني', haz: [1, 0, 0], gaps: false, every: [3.4, 4.6], ghost: 0.3 },
+    { name: 'جدار اللبلاب', floors: 5, tip: 'غربان تنقضّ: توقّف لتنحني تحتها ولا تقفز', haz: [0.5, 0.5, 0], gaps: false, every: [3.0, 4.2], ghost: 0.25 },
+    { name: 'برج الرموز', floors: 6, tip: 'درجات مكسورة: انقر لتقفز فوق الفجوة', haz: [0.7, 0.3, 0], gaps: true, every: [3.0, 4.0], ghost: 0.75 },
+    { name: 'قلب العاصفة', floors: 6, tip: 'حجارة تسقط: لا تقف على الدرجة المعلَّمة', haz: [0.45, 0, 0.55], gaps: false, every: [2.7, 3.7], ghost: 0.1 },
+    { name: 'أعالي الجليد', floors: 6, tip: 'جليد يتساقط ودرجات مكسورة تحت الثلج', haz: [0.2, 0.35, 0.45], gaps: true, every: [2.6, 3.5], ghost: 0.2 },
+    { name: 'طريق المنارة', floors: 5, tip: 'كل ما مرّ بك دفعة واحدة، والمنارة فوقك', haz: [0.34, 0.33, 0.33], gaps: true, every: [2.3, 3.2], ghost: 0 }
+  ];
+  const ORD = ['الأولى', 'الثانية', 'الثالثة', 'الرابعة', 'الخامسة', 'الأخيرة'];
+  const STAGE_START = [];
+  let TOP_FLOOR = 0;
+  for (const s of STAGES) { STAGE_START.push(TOP_FLOOR); TOP_FLOOR += s.floors; }
+  const I_END = TOP_FLOOR * N;    // آخر درجة
+  const TOPY = TOP_FLOOR * REV;   // ارتفاع سطح البرج
+  const MERLON = 9;               // ارتفاع شرفات السطح
+  const stageOfFloor = f => { let k = 0; for (let i = 1; i < STAGES.length; i++) if (f >= STAGE_START[i]) k = i; return k; };
+  // مواقد تعيد الشعلات: عند بداية كل مرحلة وفي منتصفها
+  const CHECKPOINTS = new Set();
+  STAGES.forEach((s, k) => { if (k) CHECKPOINTS.add(STAGE_START[k]); CHECKPOINTS.add(STAGE_START[k] + Math.ceil(s.floors / 2)); });
+
+  // لوحة كل مرحلة: [حبر، عتمة]
+  const PAL = [
+    [[236, 230, 251], [7, 6, 13]],
+    [[224, 243, 214], [5, 10, 7]],
+    [[219, 202, 255], [10, 6, 18]],
+    [[203, 216, 240], [4, 7, 13]],
+    [[221, 244, 255], [3, 10, 18]],
+    [[255, 231, 196], [18, 10, 9]]
+  ];
+  const PAL_DAWN = [[255, 243, 220], [44, 22, 17]];
+
   const $ = id => document.getElementById(id);
-  const stage = $('stage'), canvas = $('c'), ctx = canvas.getContext('2d');
-  const floorEl = $('floor'), livesEl = $('lives'), starsEl = $('stars');
+  const stage = $('stage'), canvas = $('c'), ctx = canvas.getContext('2d', { alpha: false });
+  const floorEl = $('floor'), livesEl = $('lives'), starsEl = $('stars'), progEl = $('prog');
   const hintEl = $('hint'), bannerEl = $('banner'), liveEl = $('live'), muteEl = $('mute');
-  const startEl = $('start'), playEl = $('play'), recordEl = $('record');
+  const startEl = $('start'), playEl = $('play'), recordEl = $('record'), stagesEl = $('stages'), stageNameEl = $('stagename');
+  const endEl = $('end'), againEl = $('again');
 
   const mod = (a, n) => ((a % n) + n) % n;
   const wrap = a => mod(a + Math.PI, TAU) - Math.PI;
+  const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
+  const sstep = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
   function hash(n) {
     n = Math.imul(n ^ 0x9e3779b9, 0x85ebca6b); n ^= n >>> 13;
     n = Math.imul(n, 0xc2b2ae35); n ^= n >>> 16;
@@ -291,16 +394,48 @@
     const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
     return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
   }
-  const zoneOf = k => Math.floor(Math.max(0, k) / ZONE_LEN) % 3;
 
-  // ---------- السماء: نجوم وغيوم تُحسب مرة واحدة ----------
+  // درجة مكسورة في المراحل التي فيها فجوات: واحدة كل عشرين درجة تقريباً، بعيداً عن المواقد
+  function gapAt(i) {
+    if (i < 8 || i > I_END - 12) return false;
+    if (!STAGES[stageOfFloor(Math.floor(i / N))].gaps) return false;
+    const blk = Math.floor(i / 20);
+    if (i !== blk * 20 + 5 + Math.floor(hash(blk * 7 + 3) * 10)) return false;
+    const m = i % N;
+    return m > 3 && m < N - 3 && hash(blk * 13 + 1) < 0.8;
+  }
+  function nextGap(pp) {
+    for (let i = Math.ceil(pp + 0.3), e = pp + 14; i < e; i++) if (gapAt(i)) return i;
+    return -1;
+  }
+
+  // ---------- حالة الجو: تتغيّر بانسياب مع الارتفاع ----------
+  const env = { over: 0, rain: 0, snow: 0, aur: 0, dawn: 0, sea: 0, mist: 0, fly: 0, leaf: 0, rune: 0, moon: 1, star: 1 };
+  function updateEnv(alt, endK) {
+    const B = STAGE_START;
+    env.over = sstep(B[3] - 2.5, B[3] + 0.4, alt) * (1 - sstep(B[4] - 0.6, B[4] + 0.9, alt));
+    env.rain = sstep(B[3], B[3] + 0.8, alt) * (1 - sstep(B[4] - 0.7, B[4] + 0.3, alt));
+    env.snow = sstep(B[4] + 0.1, B[4] + 1, alt) * (1 - sstep(B[5] - 0.3, B[5] + 1.2, alt));
+    env.aur = sstep(B[4] + 0.6, B[4] + 2, alt) * (1 - sstep(B[5] - 0.8, B[5] + 0.6, alt));
+    env.sea = sstep(B[4] - 0.4, B[4] + 1.2, alt);
+    env.dawn = clamp01(sstep(B[5], TOP_FLOOR, alt) * 0.5 + endK * 0.5);
+    env.mist = sstep(0.7, 2, alt) * (1 - sstep(B[3] - 2, B[3], alt));
+    env.fly = 1 - sstep(B[2] - 1.5, B[2], alt);
+    env.leaf = sstep(B[1], B[1] + 0.8, alt) * (1 - sstep(B[2] - 0.6, B[2] + 0.4, alt));
+    env.rune = sstep(B[2], B[2] + 0.8, alt) * (1 - sstep(B[3] - 0.6, B[3] + 0.4, alt));
+    env.moon = 1 - env.over;
+    env.star = (1 - env.over) * (1 - env.dawn * 0.9);
+  }
+
+  // ---------- السماء والأفق: نجوم وغيوم وجبال وبحر غيوم، تُحسب مرة واحدة ----------
   const PER = 1005, SKH = 512, SKY_K = PER / TAU;
   const starTex = new Uint8Array(PER * SKH), cloudTex = new Uint8Array(PER * SKH);
+  const mtFar = new Uint8Array(PER), mtNear = new Uint8Array(PER), mtLit = new Uint8Array(PER), seaH = new Uint8Array(PER);
   (function buildSky() {
     for (let y = 0, i = 0; y < SKH; y++) for (let x = 0; x < PER; x++, i++) {
-      // غيوم رقيقة بثلاث طبقات من الضجيج
-      const n = vnoise(x / PER * 10, y / SKH * 8, 10, 8) * 0.5 + vnoise(x / PER * 20, y / SKH * 16, 20, 16) * 0.3 + vnoise(x / PER * 40, y / SKH * 32, 40, 32) * 0.2;
-      const cv = Math.min(1, (n - 0.52) / 0.24);
+      // غيوم بثلاث طبقات من الضجيج
+      const n = vnoise(x / PER * 10, y / SKH * 12, 10, 12) * 0.5 + vnoise(x / PER * 20, y / SKH * 24, 20, 24) * 0.3 + vnoise(x / PER * 40, y / SKH * 48, 40, 48) * 0.2;
+      const cv = Math.min(1, (n - 0.56) / 0.17);
       cloudTex[i] = cv > 0 ? cv * cv * (3 - 2 * cv) * 84 : 0;
       // نجوم متفرقة تتكاثف على امتداد درب التبانة
       const off = mod(y - 110 * Math.sin(x / PER * TAU), SKH) - 256;
@@ -315,20 +450,45 @@
         starTex[(y + d) * PER + x] = 255;
       }
     }
+    // سلسلة جبال بعيدة، وتلال قريبة عليها صنوبر، وقمم بحر الغيوم
+    for (let x = 0; x < PER; x++) {
+      const u = x / PER;
+      let r = 0, w = 0.55, k = 4;
+      for (let o = 0; o < 4; o++) { r += w * (1 - Math.abs(2 * vnoise(u * k, 3.7 + o, k, 64) - 1)); w *= 0.45; k *= 2; }
+      mtFar[x] = Math.min(126, 8 + Math.pow(r, 2.6) * 150);
+      let h = 5 + vnoise(u * 7, 1.3, 7, 64) * 15 + vnoise(u * 21, 5.1, 21, 64) * 6;
+      const tr = Math.floor(x / 6);
+      if (hash(tr * 53 + 7) > 0.35) h += Math.max(0, (5 + hash(tr * 11) * 7) * (1 - Math.abs((x % 6) - 2.5) / 3));
+      mtNear[x] = h;
+      seaH[x] = 5 + vnoise(u * 10, 9.1, 10, 64) * 15 + vnoise(u * 30, 2.2, 30, 64) * 7 + vnoise(u * 90, 6.4, 90, 64) * 3;
+    }
+    for (let x = 0; x < PER; x++) mtLit[x] = mtFar[mod(x + 2, PER)] < mtFar[mod(x - 2, PER)] ? 1 : 0;
   })();
 
-  // ---------- الشاشة وذاكرة نسيج البرج ----------
-  let W = 290, H = 580, PXC = 1.4, img = null, buf = null, cx = 145;
+  // ---------- مصفوفة التنقيط: شبكة منتظمة بأربعة وستين مستوى للتدرّج ----------
+  const TM = 64, TMASK = TM - 1;
+  const THR = new Float32Array(TM * TM);
+  for (let y = 0; y < TM; y++) for (let x = 0; x < TM; x++) {
+    const xx = x & 7, yy = y & 7;
+    let v = 0;
+    for (let b = 0; b < 3; b++) v |= ((((xx ^ yy) >> b) & 1) << (2 * (2 - b) + 1)) | (((yy >> b) & 1) << (2 * (2 - b)));
+    THR[y * TM + x] = (v + 0.5) / 64;
+  }
+
+  // ---------- الشاشة ----------
+  let W = 290, H = 580, PXC = 1.4, img = null, data32 = null, buf = null, vig = null, cx = 145, qLevel = 0;
   const RC = RW * S;
   const CU = Math.round(TAU * RC);
   const CH = 64;
-  const chunks = new Map();
+  const LE = new Uint8Array(new Uint32Array([1]).buffer)[0] === 1;
+  const pack = c => (LE ? (255 << 24 | c[2] << 16 | c[1] << 8 | c[0]) : (c[0] << 24 | c[1] << 16 | c[2] << 8 | 255)) >>> 0;
   let tx0 = 0, tx1 = 0, colPhi, colCos, colDep, colU, colXw, colDw;
+  let rowGlow, rowDawn, colIdx, colCld, colCld2, colSea, colSun, aurA, aurBot, aurF;
 
   function resize() {
     const vw = window.innerWidth, vh = window.innerHeight;
     const dpr = window.devicePixelRatio || 1;
-    let dev = Math.max(1, Math.round(Math.min(vw, vh, 520) / 270 * dpr));
+    let dev = Math.max(1, Math.round(Math.min(vw, vh, 520) / 270 * dpr)) + qLevel;
     do {
       PXC = dev / dpr;
       W = Math.ceil(vw / PXC); H = Math.ceil(vh / PXC);
@@ -337,8 +497,16 @@
     canvas.width = W; canvas.height = H;
     canvas.style.width = (W * PXC) + 'px';
     canvas.style.height = (H * PXC) + 'px';
+    canvas.style.alignSelf = 'start';
     img = ctx.createImageData(W, H);
+    data32 = new Uint32Array(img.data.buffer);
     buf = new Float32Array(W * H);
+    // تعتيم خفيف للأطراف يشدّ العين إلى الوسط
+    vig = new Float32Array(W * H);
+    for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
+      const dx = (x - W / 2) / (W / 2), dy = (y - H * 0.56) / (H * 0.62);
+      vig[i] = 1 - 0.36 * sstep(0.5, 1.45, dx * dx * 0.6 + dy * dy * 0.8);
+    }
     cx = W >> 1;
     tx0 = Math.max(0, cx - RC); tx1 = Math.min(W - 1, cx + RC - 1);
     const n = tx1 - tx0 + 1;
@@ -349,29 +517,42 @@
       colPhi[i] = ph; colCos[i] = c; colDep[i] = Math.round(RC * c * TILT);
       colU[i] = ph / TAU * CU; colXw[i] = X / S; colDw[i] = RW * c;
     }
+    rowGlow = new Float32Array(H); rowDawn = new Float32Array(H);
+    colIdx = new Int32Array(W); colCld = new Int32Array(W); colCld2 = new Int32Array(W); colSea = new Int32Array(W);
+    colSun = new Float32Array(W); aurA = new Float32Array(W); aurBot = new Float32Array(W);
+    aurF = new Float32Array(H);
+    for (let d = 0; d < H; d++) aurF[d] = Math.min(1, d / 4) * Math.exp(-d / (H * 0.13));
   }
-  window.addEventListener('resize', resize);
+  let lastVW = window.innerWidth, lastVH = window.innerHeight;
+  window.addEventListener('resize', () => {
+    const dw = Math.abs(window.innerWidth - lastVW), dh = Math.abs(window.innerHeight - lastVH);
+    if (dw < 2 && dh < 140) return;
+    lastVW = window.innerWidth; lastVH = window.innerHeight; resize();
+  });
   resize();
 
-  // ---------- نسيج سطح البرج ----------
+  // ---------- نسيج سطح البرج: جدار مختلف لكل مرحلة ----------
+  const TRANSP = 9;               // فراغ يُرى من خلاله (بين شرفات السطح)
   const winCache = new Map();
   function winsAt(n) {
     let w = winCache.get(n);
     if (w) return w;
     w = [];
-    if (n >= 0) {
-      const a0 = hash(n * 31 + 7) * TAU;
+    if (n >= 0 && n < TOP_FLOOR - 1) {
       for (let j = 0; j < 2; j++) {
         const h = hash(n * 7919 + j * 101 + 13);
-        if (h > (j ? 0.45 : 0.8)) continue;
-        const a = mod(a0 + j * Math.PI, TAU);
-        w.push({ a, y: (a / TAU + n) * REV + 38, glow: h < (j ? 0.25 : 0.5) });
+        if (h > (j ? 0.5 : 0.82)) continue;
+        // النافذة فوق رأس المسافر عند مروره، وبعيدة عن أحزمة الطوابق
+        const f = j ? 0.76 + hash(n * 31 + 7) * 0.2 : 0.03 + hash(n * 57 + 3) * 0.16;
+        const st = stageOfFloor(j ? n + 1 : n);
+        w.push({ a: f * TAU, y: (f + n) * REV + 38, glow: st === 3 ? false : st === 5 ? true : h < (j ? 0.28 : 0.5), st });
       }
     }
     winCache.set(n, w);
     if (winCache.size > 200) winCache.clear();
     return w;
   }
+
   // حجارة غير منتظمة بفواصل غائرة وحبيبات وبقع رطوبة
   function bricks(a, wy) {
     const row = Math.floor(wy / 7), yl = (wy - row * 7) / 7;
@@ -387,20 +568,118 @@
     m += (vnoise(a / TAU * 240, wy * 0.95, 240, 4096) - 0.5) * 0.16;
     const damp = vnoise(a / TAU * 24, wy / 34, 24, 4096);
     if (damp > 0.6) m *= 1 - Math.min(0.45, (damp - 0.6) * 1.6);
-    if (yl > 0.86) m *= 1.3; else if (yl < jointH + 0.13) m *= 0.72;
-    if (fr < 0.1) m *= 0.8; else if (fr > 0.93) m *= 1.15;
     if (hb > 0.93) m *= 0.62;
+    return Math.max(0.07, m);
+  }
+
+  // لبلاب: أوراق متراكبة كالحراشف، وخيوط تتدلّى من أطراف الكتلة
+  function ivyWall(a, wy) {
+    const u = a / TAU;
+    const nv = vnoise(u * 9, wy / 26, 9, 4096) * 0.72 + vnoise(u * 27, wy / 9, 27, 4096) * 0.28;
+    let cover = nv > 0.52;
+    if (!cover) {
+      const sc = Math.floor(u * 81);
+      if (hash(sc * 13 + 5) > 0.7) {
+        const up = vnoise(u * 9, (wy + 9) / 26, 9, 4096) * 0.72 + vnoise(u * 27, (wy + 9) / 9, 27, 4096) * 0.28;
+        const up2 = vnoise(u * 9, (wy + 20) / 26, 9, 4096);
+        cover = up > 0.52 || up2 > 0.6;
+      }
+      if (!cover) return bricks(a, wy);
+    }
+    const gy = wy / 3.4, row = Math.floor(gy);
+    const fx0 = u * 81 + (row & 1) * 0.5, col = Math.floor(fx0), cid = mod(col, 81);
+    const hx = hash(cid * 57 + row * 113 + 9);
+    const lx = fx0 - col - 0.5 - (hx - 0.5) * 0.3, ly = gy - row - 0.5 - (hash(cid * 31 + row * 71) - 0.5) * 0.3;
+    const d = Math.abs(lx) * 1.35 + Math.abs(ly) * (ly < 0 ? 0.95 : 1.5);   // الورقة مدبّبة إلى الأسفل
+    if (d > 0.64) return 0.03;
+    if (Math.abs(lx) < 0.07 && ly < 0.2) return 0.2;                          // عِرق الورقة
+    return 0.36 + hx * 0.5 + (ly > 0 ? 0.1 : 0);
+  }
+
+  // حجارة كبيرة منحوتة، في بعضها رموز تتوهّج، وحزام كتابة في منتصف كل طابق
+  function runeWall(a, wy, fb) {
+    const u = a / TAU;
+    if (fb > 45.5 && fb < 54.2) {
+      if (fb < 46.4 || fb > 53.3) return 0.62;
+      const cu = u * 72, cell = Math.floor(cu), ci = Math.floor((cu - cell) * 5), ri = Math.floor((fb - 46.4) / 1.38);
+      if (ci >= 1 && ci <= 3 && hash(cell * 91 + (ci === 3 ? 1 : ci) * 7 + ri * 13 + 5) > 0.42) return -0.78;
+      return 0.1;
+    }
+    const row = Math.floor(wy / 14);
+    const bu = u * 10 + (row & 1) * 0.5, bi = Math.floor(bu), fr = bu - bi, frv = mod(wy, 14) / 14;
+    if (frv < 0.05 || fr < 0.025) return 0.06;
+    const id = row * 131 + (bi % 10) * 17;
+    if (hash(id) < 0.32) {
+      const ci = Math.floor((fr - 0.5) * 27.6 / 1.7 + 2.5), ri = Math.floor((frv - 0.5) * 14 / 1.7 + 2.5);
+      if (ci >= 0 && ci < 5 && ri >= 0 && ri < 5 && hash(id * 91 + (ci > 2 ? 4 - ci : ci) * 7 + ri * 13) > 0.5) return -0.9;
+    }
+    return 0.28 + hash(id + 5) * 0.14 + (vnoise(u * 170, wy * 0.8, 170, 4096) - 0.5) * 0.1;
+  }
+
+  // حجر داكن مبلول تسيل عليه خيوط الماء، وأطواق حديد مبرشمة
+  function stormWall(a, wy, fb) {
+    const u = a / TAU;
+    if (fb > 46 && fb < 50.4) {
+      if (fb < 46.7 || fb > 49.7) return 0.5;
+      const rv = mod(u * 36, 1);
+      return rv > 0.4 && rv < 0.6 && fb > 47.4 && fb < 49 ? 0.95 : 0.07;
+    }
+    const row = Math.floor(wy / 10), yl = wy / 10 - row;
+    const bu = u * 14 + (row & 1) * 0.5, bi = Math.floor(bu), fr = bu - bi;
+    if (yl < 0.07 || fr < 0.03) return 0.04;
+    let m = 0.15 + hash(row * 131 + (bi % 14) * 17) * 0.1 + (vnoise(u * 200, wy * 0.8, 200, 4096) - 0.5) * 0.12;
+    if (yl > 0.88) m *= 1.6;                                                  // حافة مبلولة تلتقط الضوء
+    const rc = Math.floor(u * 46);
+    if (hash(rc * 7 + 1) > 0.58) {
+      const off = u * 46 - rc - 0.5 - 0.24 * Math.sin(wy * 0.11 + rc);
+      if (Math.abs(off) < 0.075) m = 0.42 + 0.4 * hash(Math.floor(wy / 3) * 13 + rc);
+    }
     return Math.max(0.05, m);
   }
-  function towerTex(a, wy) {
-    const m = towerBase(a, wy);
-    if (m <= 0) return m;
-    const hs = mod(wy - a / TAU * REV, REV);
-    if (hs > REV - TH - 11 && hs <= REV - TH + 1) return m * (0.32 + 0.6 * (REV - TH + 1 - hs) / 12);
-    if (hs < 2.2) return m * 0.7;
+
+  // ثلج يستقرّ على حواف الحجارة، وبقع صقيع
+  function iceWall(a, wy) {
+    const u = a / TAU;
+    const row = Math.floor(wy / 7), yl = (wy - row * 7) / 7;
+    // الثلج يتراكم أكواماً متفرقة لا صفوفاً منتظمة
+    const drift = vnoise(u * 11, wy / 30, 11, 4096) * 0.7 + vnoise(u * 33, row * 1.7, 33, 4096) * 0.3;
+    if (drift > 0.5 && yl > 1 - (drift - 0.5) * 2.4 - vnoise(u * 60, row * 3.1, 60, 4096) * 0.22) return 0.93;
+    let m = bricks(a, wy) * 1.12;
+    const fr = vnoise(u * 30, wy / 12, 30, 4096);
+    if (fr > 0.6) m = Math.min(0.88, m + 0.22 + 0.3 * hash(Math.floor(u * 276) * 7 + Math.floor(wy * 2) * 13));
     return m;
   }
+
+  // حجر فاتح مصقول، ورواق أقواس منحوت في منتصف كل طابق
+  function summitWall(a, wy, fb) {
+    const u = a / TAU;
+    if (fb > 43 && fb < 63.5) {
+      if (fb < 44 || fb > 62.5) return 0.85;
+      const cu = mod(u * 18, 1) - 0.5;
+      if (Math.abs(cu) > 0.4) return Math.abs(cu) > 0.47 ? 0.3 : 0.74;        // عمود بين قوسين
+      const x = cu * 15.36, y = fb - 44, r = 5.6;
+      const inside = y < 11.5 ? Math.abs(x) < r : x * x + (y - 11.5) * (y - 11.5) < r * r;
+      if (!inside) return 0.6;
+      const edge = y < 11.5 ? r - Math.abs(x) : r - Math.sqrt(x * x + (y - 11.5) * (y - 11.5));
+      if (edge < 0.9) return x < 0 || y > 11.5 ? 0.1 : 0.42;                   // ظل داخل التجويف
+      return 0.26 + y * 0.006;
+    }
+    const row = Math.floor(wy / 9), yl = wy / 9 - row;
+    const bu = u * 16 + (row & 1) * 0.5, bi = Math.floor(bu), fr = bu - bi;
+    if (yl < 0.05 || fr < 0.022) return 0.2;
+    return 0.5 + hash(row * 131 + (bi % 16) * 17) * 0.12 + (vnoise(u * 160, wy * 0.7, 160, 4096) - 0.5) * 0.07;
+  }
+
   function towerBase(a, wy) {
+    // السطح: شرفات حجرية بينها فراغ
+    if (wy >= TOPY) {
+      if (wy >= TOPY + MERLON) return TRANSP;
+      const seg = mod(a / TAU * 18, 1);
+      if (seg > 0.56) return TRANSP;
+      if (wy > TOPY + MERLON - 1.3) return 0.92;
+      if (seg < 0.035 || seg > 0.525) return 0.22;
+      return 0.5 + hash(Math.floor(a / TAU * 18) * 7 + Math.floor(wy * 0.4)) * 0.1;
+    }
     const n0 = Math.floor(wy / REV);
     for (let n = n0; n >= n0 - 1; n--) {
       const ws = winsAt(n);
@@ -408,7 +687,7 @@
         const w = ws[q];
         const ax = wrap(a - w.a) * RW, ay = wy - w.y, aax = ax < 0 ? -ax : ax;
         if (aax > 12 || ay < -3 || ay > 36) continue;
-        if (ay < 0) return 0.95;
+        if (ay < 0) return w.st === 4 && ay > -1.6 ? 1 : 0.95;                 // العتبة (عليها ثلج في الأعالي)
         const up = ay - 20;
         if (!(aax <= 10 && (ay < 20 || (aax + 6) * (aax + 6) + up * up <= 272))) continue;
         const inInner = ay >= 2 && aax <= 8 && (ay < 20 || (aax + 6) * (aax + 6) + up * up <= 204);
@@ -420,43 +699,88 @@
       }
     }
     if (wy < 6) return mod(wy, 6) < 0.6 || mod(a / TAU * 12, 1) < 0.04 ? 0.08 : 0.5;
-    const fb = mod(wy, REV);
-    if (fb < 1.3) return 0.78;
-    if (fb < 2.6) return 0.1;
+    const fb = wy - n0 * REV, st = stageOfFloor(n0);
+    if (n0 > 0 && STAGE_START[st] === n0) {
+      // إفريز عريض بأسنان حجرية يفصل بين مرحلتين
+      if (fb < 8.6) {
+        if (fb < 1.3 || fb > 7.4) return 0.88;
+        if (fb < 2.3) return 0.1;
+        return mod(a / TAU * 48, 1) < 0.5 ? 0.72 : 0.09;
+      }
+    } else {
+      if (fb < 1.3) return 0.78;
+      if (fb < 2.6) return 0.1;
+    }
     if (fb > REV - 1.2) return 0.55;
-    const zone = zoneOf(n0);
-    if (zone === 1) {
-      const nv = vnoise(a / TAU * 10, wy / 24, 10, 4096);
-      if (nv > 0.54) {
-        const hl = hash(Math.floor(a / TAU * 110) * 57 + Math.floor(wy / 2.5) * 113);
-        return hl > 0.5 ? 0.85 : hl > 0.22 ? 0.42 : 0.06;
+    if (st === 4) {
+      // دلّايات جليد تحت حزام كل طابق
+      const below = REV - fb, col = Math.floor(a / TAU * 92), hh = hash(col * 17 + n0 * 5);
+      if (hh > 0.42) {
+        const len = 3 + hh * 9;
+        if (below < len) {
+          const fx = Math.abs(a / TAU * 92 - col - 0.5), wd = 0.42 * (1 - below / len);
+          if (fx < wd) return fx > wd - 0.13 ? 0.3 : 0.97;
+        }
       }
-      return bricks(a, wy);
+      return iceWall(a, wy);
     }
-    if (zone === 2) {
-      const row = Math.floor(wy / 14);
-      const bu = a / TAU * 10 + (row & 1) * 0.5, bi = Math.floor(bu), fr = bu - bi, frv = mod(wy, 14) / 14;
-      if (frv < 0.05 || fr < 0.025) return 0.07;
-      const id = row * 131 + (bi % 10) * 17;
-      if (hash(id) < 0.32) {
-        const ci = Math.floor((fr - 0.5) * 27.6 / 1.7 + 2.5), ri = Math.floor((frv - 0.5) * 14 / 1.7 + 2.5);
-        if (ci >= 0 && ci < 5 && ri >= 0 && ri < 5 && hash(id * 91 + (ci > 2 ? 4 - ci : ci) * 7 + ri * 13) > 0.5) return -0.9;
-      }
-      return 0.3 + hash(id + 5) * 0.14;
-    }
+    if (st === 1) return ivyWall(a, wy);
+    if (st === 2) return runeWall(a, wy, fb);
+    if (st === 3) return stormWall(a, wy, fb);
+    if (st === 5) return summitWall(a, wy, fb);
     return bricks(a, wy);
   }
-  function getChunk(cy) {
-    let c = chunks.get(cy);
-    if (c) return c;
-    c = new Float32Array(CU * CH);
-    for (let r = 0, i = 0; r < CH; r++) {
-      const wy = (cy * CH + r) / S;
-      for (let u = 0; u < CU; u++, i++) c[i] = towerTex(u / CU * TAU, wy);
+  function towerTex(a, wy) {
+    const m = towerBase(a, wy);
+    if (m <= 0 || m > 5) return m;
+    // ظل الدرج على الجدار: أغمق تحته مباشرة، وأثر خفيف فوقه
+    const hs = mod(wy - a / TAU * REV, REV);
+    if (hs > REV - TH - 11 && hs <= REV - TH + 1) return m * (0.32 + 0.6 * (REV - TH + 1 - hs) / 12);
+    if (hs < 2.2) return m * 0.7;
+    return m;
+  }
+
+  // قطع النسيج تُبنى على مهل قبل أن تظهر، ومع كل قطعة ميل سطحها لإضاءة النقش البارز
+  const chunks = new Map();
+  const GS = 250;
+  let pend = null;
+  function texRow(t, off, wy) { for (let u = 0; u < CU; u++) t[off + u] = towerTex(u / CU * TAU, wy); }
+  function finishChunk(cy, t) {
+    const m = new Float32Array(CU * CH), gx = new Int8Array(CU * CH), gy = new Int8Array(CU * CH);
+    for (let r = 0, o = 0; r < CH; r++) for (let u = 0; u < CU; u++, o++) {
+      const i = (r + 1) * CU + u, v = t[i];
+      m[o] = v;
+      if (v > 0 && v < 5) {
+        let a = t[i - CU + (u ? CU - 1 : 2 * CU - 1)], b = t[i - CU + (u < CU - 1 ? CU + 1 : 1)], c = t[i - CU], d = t[i + CU];
+        if (!(a > 0 && a < 5)) a = v; if (!(b > 0 && b < 5)) b = v;
+        if (!(c > 0 && c < 5)) c = v; if (!(d > 0 && d < 5)) d = v;
+        const dx = (b - a) * GS, dy = (d - c) * GS;
+        gx[o] = dx > 127 ? 127 : dx < -127 ? -127 : dx;
+        gy[o] = dy > 127 ? 127 : dy < -127 ? -127 : dy;
+      }
     }
+    const c = { m, gx, gy };
     chunks.set(cy, c);
-    if (chunks.size > 26) for (const key of chunks.keys()) if (Math.abs(key - cy) > 12) chunks.delete(key);
+    if (chunks.size > 28) for (const key of chunks.keys()) if (Math.abs(key - cy) > 13) chunks.delete(key);
     return c;
+  }
+  function stepPending(rows) {
+    for (let k = 0; k < rows && pend; k++) {
+      texRow(pend.t, pend.row * CU, (pend.cy * CH + pend.row - 1) / S);
+      if (++pend.row === CH + 2) { finishChunk(pend.cy, pend.t); pend = null; }
+    }
+  }
+  function getChunk(cy) {
+    const c = chunks.get(cy);
+    if (c) return c;
+    if (pend && pend.cy === cy) { stepPending(CH + 2); return chunks.get(cy); }
+    const t = new Float32Array((CH + 2) * CU);
+    for (let r = 0; r < CH + 2; r++) texRow(t, r * CU, (cy * CH + r - 1) / S);
+    return finishChunk(cy, t);
+  }
+  function prefetchChunk(cy, rows) {
+    if (!pend && !chunks.has(cy)) pend = { cy, row: 0, t: new Float32Array((CH + 2) * CU) };
+    if (pend) stepPending(rows | 0);
   }
 
   // ---------- رسوم صغيرة ----------
@@ -513,6 +837,74 @@
       const ch = rows[r][flip ? w - 1 - c : c];
       if (ch !== '.') put(x0 + c, y0 + r, ch === 'o' ? 0 : alpha);
     }
+  }
+
+  // غراب بجناحين مرفوعين ثم مخفوضين، وحجر ساقط، ودلّاية جليد
+  const RAVEN = [
+    up([
+      '........#......#....',
+      '.......###....###...',
+      '......####...####...',
+      '......#####.#####...',
+      '..##...#########....',
+      '.#o##############...',
+      '#################.##',
+      '..###############.##',
+      '....###########.....',
+      '......#######.......',
+      '....................',
+      '....................'
+    ]),
+    up([
+      '....................',
+      '....................',
+      '....................',
+      '....................',
+      '..##................',
+      '.#o##############...',
+      '#################.##',
+      '..###############.##',
+      '....####...####.....',
+      '.....####...####....',
+      '......###....###....',
+      '.......#......#.....'
+    ])
+  ];
+  const ROCK = [
+    up(['..#####..', '.#######.', '###o#####', '####oo###', '#########', '##o######', '.#######.', '..####...']),
+    up(['...####..', '.#######.', '######o##', '###o#####', '##oo#####', '########.', '.#######.', '...###...'])
+  ];
+  const ICICLE = up(['.#####.', '.#####.', '.#o###.', '..####.', '..###..', '..#o#..', '..###..', '...#...', '...#...', '...#...']);
+  const LEAF = [['.#.', '###', '.#.'], ['#..', '##.', '.##'], ['..#', '.##', '##.']];
+
+  // شكل معتم بحدّ مضيء (للغربان): يُقرأ على الجدار المضاء وعلى السماء المظلمة معاً
+  function spriteInk(rows, sxc, syFoot, flip) {
+    const h = rows.length, w = rows[0].length;
+    const x0 = Math.round(sxc) - (w >> 1), y0 = Math.round(syFoot) - h + 1;
+    for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) {
+      if (rows[r][flip ? w - 1 - c : c] === '.') continue;
+      for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) put(x0 + c + ox, y0 + r + oy, 1);
+    }
+    for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) {
+      const ch = rows[r][flip ? w - 1 - c : c];
+      if (ch !== '.') put(x0 + c, y0 + r, ch === 'o' ? 1 : 0);
+    }
+  }
+  // ظل بيضوي على الأرض
+  function groundShadow(sxc, syc, rx, ry, k) {
+    const x0 = Math.max(0, Math.floor(sxc - rx)), x1 = Math.min(W - 1, Math.ceil(sxc + rx));
+    const y0 = Math.max(0, Math.floor(syc - ry)), y1 = Math.min(H - 1, Math.ceil(syc + ry));
+    for (let y = y0; y <= y1; y++) for (let x = x0, i = y * W + x0; x <= x1; x++, i++) {
+      const d2 = (x - sxc) * (x - sxc) / (rx * rx) + (y - syc) * (y - syc) / (ry * ry);
+      if (d2 <= 1) buf[i] *= k + (1 - k) * d2;
+    }
+  }
+  function addPx(sx, sy, v) {
+    if (sx >= 0 && sx < W && sy >= 0 && sy < H) { const i = sy * W + sx, n = buf[i] + v; buf[i] = n > 1 ? 1 : n; }
+  }
+  function line(xa, ya, xb, yb, v) {
+    const n = Math.max(1, Math.ceil(Math.max(Math.abs(xb - xa), Math.abs(yb - ya))));
+    for (let k = 0; k <= n; k++) put(Math.round(xa + (xb - xa) * k / n), Math.round(ya + (yb - ya) * k / n), v);
   }
 
   // ---------- برميل خشبي أسطواني ثلاثي الأبعاد عالي الدقة والوضوح ----------
@@ -652,7 +1044,7 @@
     }
   }
 
-  // ---------- الشخصية: مسافر بنِسَب جسم حقيقية، مظلَّل من جهة المشعل ----------
+  // ---------- المسافر: بنِسَب جسم حقيقية، مظلَّل من جهة المشعل ----------
   const KS = 1.35, KW = 76, KH = 112, KCX = 34, KFEET = 94;
   const L1 = 11.6, L2 = 11.4;
   const kc = document.createElement('canvas'); kc.width = KW; kc.height = KH;
@@ -705,7 +1097,7 @@
     kg.fillStyle = gray(near ? 235 : 130); kg.fillRect(mx - 2.2, my - 0.5, 4.4, 0.9);          // حافة الحذاء العليا
   }
 
-  function drawKnight(pp, speed, lit, t, blow, duckAmt, jumpH) {
+  function drawKnight(pp, speed, lit, t, blow, duckAmt, jumpH, raise) {
     kg.setTransform(1, 0, 0, 1, 0, 0);
     kg.clearRect(0, 0, KW, KH);
     kg.setTransform(KS, 0, 0, KS, KCX, KFEET);
@@ -828,7 +1220,8 @@
 
     // 5) الذراع القريبة ترفع المشعل
     const ab = Math.sin(pp * Math.PI) * 0.6 - duckAmt * 3.2 + jumpTuck * 1.4;
-    const hx2 = 11.4 - duckAmt * 1.2, hy2 = -11.6 + ab, ex = 6.4, ey = -7.6 + ab * 0.6;
+    const rz = raise || 0;
+    const hx2 = 11.4 - duckAmt * 1.2 - rz * 1.5, hy2 = -11.6 + ab - rz * 6.5, ex = 6.4 + rz, ey = -7.6 + ab * 0.6 - rz * 3.2;
     taper(hx2 + 0.2, hy2 + 5.0, 0.9, hx2 + 0.9, hy2 - 8.6, 1.3, gray(235));   // العصا
     kg.beginPath(); kg.ellipse(hx2 + 1.0, hy2 - 9.7, 2.5, 2.1, 0, 0, TAU);                                // رأس المشعل الملفوف
     kg.strokeStyle = '#000'; kg.lineWidth = 1.1; kg.stroke(); kg.fillStyle = gray(72); kg.fill();
@@ -862,9 +1255,31 @@
     kg.restore();
   }
 
-  // نسخ الشخصية إلى الشاشة: تنقيط خاص بها ثابت على جسمها فلا يرتعش ظلّها أثناء الصعود
+  // صورة المسافر لهذا الإطار: تُقرأ مرة واحدة ثم يُرسم منها الظل والجسم
+  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(v => (v + 0.5) / 16);
+  let kd = null;
+  function grabKnight() { kd = kg.getImageData(0, 0, KW, KH).data; }
+
+  // ظل المسافر على الجدار والدرج: إسقاط من نقطة المشعل، أكبر من الجسم ويرتجف مع اللهب
+  function castShadow(sxc, syFeet, lx, ly, kx, ky, dark) {
+    const fx = sxc - KCX, fy = syFeet - KFEET;               // موضع زاوية الصورة على الشاشة
+    const x0 = Math.max(0, Math.floor(lx + (fx - lx) * kx)), x1 = Math.min(W - 1, Math.ceil(lx + (fx + KW - lx) * kx));
+    const y0 = Math.max(0, Math.floor(syFeet - KFEET * ky)), y1 = Math.min(H - 1, syFeet + 2);
+    const ikx = 1 / kx, iky = 1 / ky;
+    for (let y = y0; y <= y1; y++) {
+      const r = Math.round(KFEET + (y - syFeet) * iky);
+      if (r < 0 || r >= KH) continue;
+      for (let x = x0, i = y * W + x0; x <= x1; x++, i++) {
+        const c = Math.round(lx + (x - lx) * ikx - fx);
+        if (c < 0 || c >= KW) continue;
+        if (kd[(r * KW + c) * 4 + 3] > 120) buf[i] *= dark;
+      }
+    }
+  }
+
+  // نسخ المسافر إلى الشاشة: تنقيط خاص به ثابت على جسمه فلا يرتعش ظلّه أثناء الصعود
   function blitKnight(sxc, syFeet) {
-    const d = kg.getImageData(0, 0, KW, KH).data;
+    const d = kd;
     for (let r = 0, i = 0; r < KH; r++) for (let c = 0; c < KW; c++, i += 4) {
       if (d[i + 3] < 120) continue;
       const sx = sxc + c - KCX, sy = syFeet - (KFEET - r);
@@ -877,8 +1292,10 @@
     }
   }
 
-  // ---------- الصوت والموسيقى ----------
+  // ---------- الصوت: مؤثرات، أجواء لكل مرحلة، وموسيقى ----------
   let ac = null, master = null, musicBus = null, noiseBuf = null, muted = false, musicTimer = 0;
+  let windGain = null, windLp = null, rainGain = null, humGain = null;
+  let musicStage = 0, musicOn = true;
   try { muted = localStorage.getItem('suood-mute') === '1'; } catch (e) { muted = false; }
   muteEl.setAttribute('aria-pressed', String(muted));
   function audioInit() {
@@ -886,22 +1303,48 @@
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     try {
-      ac = new AC({ latencyHint: 'interactive' });               // أقل تأخير ممكن للمؤثرات
+      ac = new AC({ latencyHint: 'interactive' });
       master = ac.createGain(); master.gain.value = muted ? 0 : 0.9; master.connect(ac.destination);
       musicBus = ac.createGain(); musicBus.gain.value = 0.6; musicBus.connect(master);
       noiseBuf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
       const d = noiseBuf.getChannelData(0);
       for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-      // ريح خافتة حول البرج
-      const n = ac.createBufferSource(); n.buffer = noiseBuf; n.loop = true;
-      const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 300;
-      const g = ac.createGain(); g.gain.value = 0.06;
-      n.connect(lp); lp.connect(g); g.connect(master); n.start();
+      const loopNoise = () => { const n = ac.createBufferSource(); n.buffer = noiseBuf; n.loop = true; n.start(0, Math.random()); return n; };
+      // ريح حول البرج
+      windLp = ac.createBiquadFilter(); windLp.type = 'lowpass'; windLp.frequency.value = 300;
+      windGain = ac.createGain(); windGain.gain.value = 0.06;
+      loopNoise().connect(windLp); windLp.connect(windGain); windGain.connect(master);
       const lfo = ac.createOscillator(); lfo.frequency.value = 0.08;
       const lg = ac.createGain(); lg.gain.value = 150;
-      lfo.connect(lg); lg.connect(lp.frequency); lfo.start();
+      lfo.connect(lg); lg.connect(windLp.frequency); lfo.start();
+      // مطر
+      const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1700;
+      const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 7500;
+      rainGain = ac.createGain(); rainGain.gain.value = 0;
+      loopNoise().connect(hp); hp.connect(lp); lp.connect(rainGain); rainGain.connect(master);
+      // همهمة الرموز
+      humGain = ac.createGain(); humGain.gain.value = 0;
+      const humMix = ac.createGain(); humMix.gain.value = 0.7;
+      [[73.42, 1], [110, 0.6], [146.83, 0.3]].forEach(([f, v]) => {
+        const o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = f; g.gain.value = v;
+        o.connect(g); g.connect(humMix); o.start();
+      });
+      const trem = ac.createOscillator(), tg = ac.createGain(); trem.frequency.value = 0.31; tg.gain.value = 0.3;
+      trem.connect(tg); tg.connect(humMix.gain); trem.start();
+      humMix.connect(humGain); humGain.connect(master);
       ac.resume().catch(() => {});
     } catch (e) { ac = null; }
+  }
+  // تُستدعى كل نصف ثانية تقريباً: تنقل الأجواء بانسياب بين المراحل
+  function setAmbience() {
+    if (!ac || !windGain) return;
+    try {
+      const t = ac.currentTime;
+      windGain.gain.setTargetAtTime(0.055 + env.over * 0.05 + env.snow * 0.07 + env.dawn * 0.01, t, 0.8);
+      windLp.frequency.setTargetAtTime(300 + env.snow * 260 + env.over * 120, t, 0.8);
+      rainGain.gain.setTargetAtTime(env.rain * 0.085, t, 0.8);
+      humGain.gain.setTargetAtTime(env.rune * 0.028, t, 0.8);
+    } catch (e) { /* تجاهل */ }
   }
   function tone(type, f0, f1, dur, vol, delay) {
     if (!ac || muted) return;
@@ -914,10 +1357,10 @@
       o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.03);
     } catch (e) { /* تجاهل */ }
   }
-  function noise(kind, freq, dur, vol) {
+  function noise(kind, freq, dur, vol, delay) {
     if (!ac || muted) return;
     try {
-      const t = ac.currentTime;
+      const t = ac.currentTime + (delay || 0);
       const n = ac.createBufferSource(); n.buffer = noiseBuf;
       const f = ac.createBiquadFilter(); f.type = kind; f.frequency.value = freq; f.Q.value = 0.9;
       const g = ac.createGain();
@@ -927,12 +1370,27 @@
     } catch (e) { /* تجاهل */ }
   }
   const thud = (freq, dur, vol) => noise('lowpass', freq, dur, vol);
-  const footstep = odd => noise('bandpass', odd ? 1500 : 1900, 0.045, 0.05);   // خطوة خفيفة
   const buzz = ms => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* تجاهل */ } };
+  // وقع القدم يتبدّل مع الأرض: حجر، ماء، ثلج
+  function footstep(odd) {
+    if (env.snow > 0.5) noise('lowpass', odd ? 700 : 850, 0.09, 0.07);
+    else if (env.rain > 0.5) { noise('bandpass', odd ? 1500 : 1900, 0.045, 0.045); noise('highpass', 3200, 0.05, 0.02); }
+    else noise('bandpass', odd ? 1500 : 1900, 0.045, 0.05);
+  }
+  function thunder(delay) {
+    noise('bandpass', 900, 0.2, 0.22, delay);
+    noise('lowpass', 150, 2.6, 0.6, delay + 0.05);
+    noise('lowpass', 90, 3.2, 0.4, delay + 0.6);
+  }
+  function caw() { tone('sawtooth', 560, 390, 0.13, 0.035); tone('sawtooth', 520, 360, 0.15, 0.035, 0.19); }
+  function chirp() {
+    if (env.dawn > 0.25) { for (let k = 0; k < 3; k++) tone('sine', 2700 + Math.random() * 500, 3500 + Math.random() * 400, 0.07, 0.016, k * 0.11); }
+    else for (let k = 0; k < 3; k++) tone('sine', 4300, 0, 0.035, 0.009, k * 0.07);
+  }
 
-  // لحن أصلي بإيقاع الفالس: صندوق موسيقى ثم مزمار هادئ فوق مرافقة وترية
+  // لحن أصلي بإيقاع الفالس، يتبدّل توزيعه مع كل مرحلة
   const NT = { A2: 110, Bb2: 116.54, C3: 130.81, D3: 146.83, F3: 174.61, G3: 196, A3: 220, Bb3: 233.08, C4: 261.63, Cs4: 277.18,
-    D4: 293.66, E4: 329.63, F4: 349.23, G4: 392, A4: 440, Bb4: 466.16, C5: 523.25, Cs5: 554.37, D5: 587.33, E5: 659.26, F5: 698.46 };
+    D4: 293.66, E4: 329.63, F4: 349.23, Fs4: 369.99, G4: 392, A4: 440, Bb4: 466.16, C5: 523.25, Cs5: 554.37, D5: 587.33, E5: 659.26, F5: 698.46, Fs5: 739.99, A5: 880, D6: 1174.66 };
   const CHORD = {
     Dm: ['D3', ['A3', 'D4', 'F4']], Gm: ['G3', ['Bb3', 'D4', 'G4']], C: ['C3', ['G3', 'C4', 'E4']],
     F: ['F3', ['A3', 'C4', 'F4']], Bb: ['Bb2', ['Bb3', 'D4', 'F4']], A7: ['A2', ['G3', 'Cs4', 'E4']]
@@ -942,6 +1400,15 @@
     ['Bb', 'Bb4', 1, 'D5', 1, 'F5', 1], ['Gm', 'D5', 2, 'Bb4', 1], ['A7', 'A4', 1, 'Cs5', 1, 'E5', 1], ['Dm', 'D5', 3],
     ['Dm', 'F5', 1.5, 'E5', 0.5, 'D5', 1], ['Gm', 'Bb4', 2, 'G4', 1], ['C', 'C5', 1, 'D5', 1, 'E5', 1], ['F', 'F5', 2, 'C5', 1],
     ['Bb', 'D5', 1.5, 'C5', 0.5, 'Bb4', 1], ['Gm', 'G4', 1, 'Bb4', 1, 'D5', 1], ['A7', 'Cs5', 2, 'E5', 1], ['Dm', 'D5', 3]
+  ];
+  // لكل مرحلة: آلة اللحن، طبقته، قوة الجهير، وهل المرافقة كاملة
+  const ARR = [
+    { mel: 'pluck', oct: 1, bass: 0.13, full: true },
+    { mel: 'reed', oct: 1, bass: 0.13, full: true },
+    { mel: 'bell', oct: 1, bass: 0.11, full: false },
+    { mel: 'reed', oct: 0.5, bass: 0.17, full: true },
+    { mel: 'pluck', oct: 2, bass: 0.09, full: false },
+    { mel: 'both', oct: 1, bass: 0.14, full: true }
   ];
   const BEAT = 0.62;
   let barIdx = 0, barTime = 0;
@@ -964,15 +1431,21 @@
     o.start(t); lfo.start(t); o.stop(t + dur + 0.05); lfo.stop(t + dur + 0.05);
   }
   function scheduleBar(idx, t0) {
-    const bar = BARS[idx % 16], ch = CHORD[bar[0]], section = Math.floor(idx / 16) % 3;
-    pluck(NT[ch[0]], t0, BEAT * 2.6, 0.13);
-    for (let b = 1; b <= 2; b++) for (const nme of ch[1]) pluck(NT[nme], t0 + b * BEAT, BEAT * 1.1, 0.03);
-    if (section === 2) { if (idx % 2 === 0) pluck(NT[ch[1][2]] * 2, t0, BEAT * 2.8, 0.05); return; }
+    const bar = BARS[idx % 16], ch = CHORD[bar[0]], ar = ARR[musicStage] || ARR[0];
+    pluck(NT[ch[0]], t0, BEAT * 2.6, ar.bass);
+    if (ar.full) { for (let b = 1; b <= 2; b++) for (const nme of ch[1]) pluck(NT[nme], t0 + b * BEAT, BEAT * 1.1, 0.03); }
+    else pluck(NT[ch[1][1]], t0 + 2 * BEAT, BEAT * 1.4, 0.035);
+    if (ar.mel === 'bell') {
+      // أجراس متباعدة: نغمة اللحن الأولى فقط، طويلة
+      if (idx % 2 === 0) pluck(NT[bar[1]] * 2, t0, BEAT * 3.2, 0.05);
+      else pluck(NT[bar[1]], t0 + BEAT, BEAT * 2.4, 0.06);
+      return;
+    }
     let t = t0;
     for (let i = 1; i < bar.length; i += 2) {
-      const dur = bar[i + 1] * BEAT;
-      if (section === 0) pluck(NT[bar[i]], t, Math.max(0.9, dur * 1.5), 0.12);
-      else reed(NT[bar[i]], t, dur * 0.96, 0.05);
+      const dur = bar[i + 1] * BEAT, f = NT[bar[i]] * ar.oct;
+      if (ar.mel === 'pluck' || ar.mel === 'both') pluck(f, t, Math.max(0.9, dur * 1.5), ar.oct > 1 ? 0.07 : 0.12);
+      if (ar.mel === 'reed' || ar.mel === 'both') reed(f, t, dur * 0.96, ar.mel === 'both' ? 0.032 : 0.05);
       t += dur;
     }
   }
@@ -980,12 +1453,26 @@
     if (!ac || musicTimer) return;
     barTime = ac.currentTime + 0.12;
     const tick = () => {
-      if (!ac || ac.state !== 'running') return;
+      if (!ac || ac.state !== 'running' || !musicOn) return;
       if (barTime < ac.currentTime - 1) barTime = ac.currentTime + 0.1;
       try { while (barTime < ac.currentTime + 0.5) { scheduleBar(barIdx++, barTime); barTime += 3 * BEAT; } } catch (e) { /* تجاهل */ }
     };
     tick();
     musicTimer = setInterval(tick, 140);
+  }
+  // ختام مشرق عند إشعال المنارة
+  function fanfare() {
+    if (!ac) return;
+    try {
+      const t = ac.currentTime + 0.05;
+      ['D3', 'A3', 'D4', 'Fs4', 'A4', 'D5', 'Fs5', 'A5', 'D6'].forEach((n, k) => pluck(NT[n], t + k * 0.13, 4.5 - k * 0.2, 0.11));
+      ['D3', 'A3', 'Fs4', 'D5'].forEach(n => {
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = 'sine'; o.frequency.value = NT[n];
+        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05, t + 1.4); g.gain.linearRampToValueAtTime(0.0001, t + 9);
+        o.connect(g); g.connect(musicBus); o.start(t); o.stop(t + 9.2);
+      });
+    } catch (e) { /* تجاهل */ }
   }
   muteEl.addEventListener('click', () => {
     muted = !muted;
@@ -1000,22 +1487,29 @@
   });
 
   // ---------- الحالة ----------
-  let p = 0, vel = 0, time = 0;
-  let mode = 'title';             // title | play | dead
-  let lives = 3, stars = 0, deadAt = 0;
-  let reached = 0;
-  let hurtUntil = 0, shake = 0, nextRock = 0, nextStar = 0, nextBat = 5, lastStepAt = 0, lastFoot = 0;
-  const things = [], bits = [], bats = [], motes = [];
-  let best = 0;
-  try { best = parseInt(localStorage.getItem('suood-best') || '0', 10) || 0; } catch (e) { best = 0; }
+  let p = 0, time = 0;
+  let mode = 'title';             // title | play | dead | summit
+  let lives = 3, stars = 0, deadAt = 0, flamesLost = 0, runTime = 0, runFrom = 0;
+  let reached = 0, curStage = 0, selStage = 0, shownFloor = -1;
+  let hurtUntil = 0, shake = 0, nextHaz = 0, nextStar = 0, nextBat = 5, lastStepAt = 0, lastFoot = 0;
+  let hintUntil = 0, atGap = -9, gapTips = 0, fadeT = 1;
+  let endT = 0, beaconLit = false, beaconGrow = 0, endShown = false, newRecord = false;
+  let lastP = 0, spd = 0, capeBlow = 0, duckPose = 0, isClimbing = false;
+  const things = [], bits = [], bats = [];
+  let best = 0, unlocked = 0, bestTime = 0;
+  const load = (k, max) => { try { return Math.max(0, Math.min(max, parseInt(localStorage.getItem(k) || '0', 10) || 0)); } catch (e) { return 0; } };
+  const save = (k, v) => { try { localStorage.setItem(k, String(v)); } catch (e) { /* التخزين غير متاح */ } };
+  best = load('suood-best', TOP_FLOOR); unlocked = load('suood-stage', STAGES.length - 1); bestTime = load('suood-time', 86400);
   const num = n => n.toLocaleString('ar-EG');
+  const clock = s => { const m = Math.floor(s / 60), r = Math.floor(s % 60); return num(m) + ':' + (r < 10 ? num(0) : '') + num(r); };
 
+  // ---------- الواجهة ----------
   const FLAME_SVG = '<svg viewBox="-1 -1 12 16" aria-hidden="true"><path d="M5 0C6 4 10 5 10 9a5 5 0 0 1-10 0C0 6 3 5 5 0Z"/></svg>';
   function drawLives() {
     livesEl.innerHTML = [0, 1, 2].map(i => i < lives ? FLAME_SVG : FLAME_SVG.replace('<svg', '<svg class="out"')).join('');
     livesEl.setAttribute('aria-label', 'الشعلات الباقية ' + num(lives));
   }
-  function showHint(title, lines) {
+  function showHint(title, lines, secs, wait) {
     hintEl.textContent = '';
     if (title) { const b = document.createElement('b'); b.textContent = title; hintEl.appendChild(b); }
     lines.forEach((t, i) => {
@@ -1023,164 +1517,285 @@
       if (i === lines.length - 1) sm.className = 'go';
       hintEl.appendChild(sm);
     });
+    hintEl.classList.toggle('wait', !!wait);
     hintEl.classList.remove('gone');
+    hintUntil = secs ? time + secs : Infinity;
   }
   let bannerTimer = 0;
-  function banner(text) {
-    bannerEl.textContent = text; bannerEl.classList.add('on');
+  function banner(text, small) {
+    bannerEl.textContent = '';
+    if (small) { const s = document.createElement('small'); s.textContent = small; bannerEl.appendChild(s); }
+    bannerEl.appendChild(document.createTextNode(text));
+    bannerEl.classList.add('on');
     clearTimeout(bannerTimer);
-    bannerTimer = setTimeout(() => bannerEl.classList.remove('on'), 2600);
+    bannerTimer = setTimeout(() => bannerEl.classList.remove('on'), 3000);
   }
-  let shownFloor = -1;
+  STAGES.forEach(s => {
+    const i = document.createElement('i');
+    i.style.setProperty('--f', s.floors);
+    i.appendChild(document.createElement('b'));
+    progEl.appendChild(i);
+  });
+  let progKey = -1;
+  function updateProg(alt) {
+    const key = Math.round(alt * 12);
+    if (key === progKey) return;
+    progKey = key;
+    for (let k = 0; k < STAGES.length; k++) progEl.children[k].firstChild.style.setProperty('--v', clamp01((alt - STAGE_START[k]) / STAGES[k].floors).toFixed(3));
+  }
+  // لون الحبر والعتمة ينتقل بين المراحل، ويدفأ عند الفجر
+  let INK32 = pack(PAL[0][0]), VOID32 = pack(PAL[0][1]), palKey = '', palTick = 0;
+  const palNow = [[0, 0, 0], [0, 0, 0]];
+  function updatePalette(alt) {
+    const k = stageOfFloor(Math.min(TOP_FLOOR - 1, Math.floor(alt)));
+    const t = k ? sstep(0, 0.9, alt - STAGE_START[k]) : 1;
+    const A = PAL[k ? k - 1 : 0], B = PAL[k], d = sstep(0.5, 1, env.dawn);
+    for (let j = 0; j < 2; j++) for (let c = 0; c < 3; c++) {
+      const v = A[j][c] + (B[j][c] - A[j][c]) * t;
+      palNow[j][c] = Math.round(v + (PAL_DAWN[j][c] - v) * d);
+    }
+    INK32 = pack(palNow[0]); VOID32 = pack(palNow[1]);
+    if (++palTick % 8) return;
+    const key = palNow[0].join() + '|' + palNow[1].join();
+    if (key === palKey) return;
+    palKey = key;
+    const rs = document.documentElement.style;
+    rs.setProperty('--ink', 'rgb(' + palNow[0].join() + ')');
+    rs.setProperty('--void', 'rgb(' + palNow[1].join() + ')');
+  }
+  function updateRecord() {
+    const parts = [];
+    if (best > 0) parts.push('أعلى طابق بلغته ' + num(best));
+    if (bestTime > 0) parts.push('أسرع صعود ' + clock(bestTime));
+    recordEl.textContent = parts.join('، ');
+  }
+  function buildChips() {
+    stagesEl.textContent = '';
+    STAGES.forEach((s, k) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.id = 'chip' + k; b.textContent = num(k + 1);
+      b.setAttribute('aria-label', 'المرحلة ' + ORD[k] + '، ' + s.name + (k > unlocked ? '، مقفلة' : ''));
+      b.setAttribute('aria-pressed', 'false');
+      b.disabled = k > unlocked;
+      b.addEventListener('click', () => selectStage(k));
+      stagesEl.appendChild(b);
+    });
+  }
+  // اختيار مرحلة يعرضها خلف القائمة
+  function selectStage(k) {
+    selStage = k;
+    for (let i = 0; i < stagesEl.children.length; i++) stagesEl.children[i].setAttribute('aria-pressed', String(i === k));
+    stageNameEl.textContent = '';
+    const sp = document.createElement('span'); sp.textContent = 'المرحلة ' + ORD[k] + '  ';
+    stageNameEl.appendChild(sp); stageNameEl.appendChild(document.createTextNode(STAGES[k].name));
+    p = STAGE_START[k] * N + (k ? 0.3 : 0); lastP = p; spd = 0;
+    reached = STAGE_START[k]; curStage = k; musicStage = k;
+    things.length = 0; bits.length = 0; bats.length = 0;
+    fadeT = 0;
+  }
+
+  function enterStage(st, arrived) {
+    curStage = st; musicStage = st;
+    if (st > unlocked) { unlocked = st; save('suood-stage', unlocked); }
+    banner(STAGES[st].name, 'المرحلة ' + ORD[st]);
+    showHint('', [STAGES[st].tip], 6);
+    nextHaz = Math.max(nextHaz, time + 3.2);
+    if (arrived) {
+      lives = 3; drawLives();
+      liveEl.textContent = 'المرحلة ' + ORD[st] + '، ' + STAGES[st].name + '. عادت شعلاتك';
+      tone('sine', 392, 0, 0.5, 0.07); tone('sine', 523, 0, 0.5, 0.07, 0.12); tone('sine', 659, 0, 0.6, 0.07, 0.24); tone('sine', 784, 0, 0.9, 0.07, 0.36);
+    }
+  }
   function onFloor(k) {
     if (k === shownFloor) return;
     shownFloor = k;
     floorEl.textContent = 'الطابق ' + num(k);
-    if (k > best) { best = k; try { localStorage.setItem('suood-best', String(best)); } catch (e) { /* تجاهل */ } }
+    if (k > best) { best = k; save('suood-best', best); }
     if (k > reached) {
       reached = k;
-      if (k % ZONE_LEN === 0) banner(ZONES[zoneOf(k)]);
-      if (k % CP_EVERY === 0) {
+      if (k >= TOP_FLOOR) return;
+      const st = stageOfFloor(k);
+      if (STAGE_START[st] === k) enterStage(st, true);
+      else if (CHECKPOINTS.has(k)) {
         // الموقد يعيد الشعلات كلها
-        if (k % ZONE_LEN !== 0) banner('أُشعل الموقد');
+        banner('أُشعل الموقد');
         lives = 3; drawLives();
         liveEl.textContent = 'أُشعل موقد الطابق ' + num(k) + ' وعادت شعلاتك';
         tone('sine', 392, 0, 0.5, 0.07); tone('sine', 523, 0, 0.5, 0.07, 0.12); tone('sine', 784, 0, 0.8, 0.07, 0.24);
       }
     }
   }
+  function beginRun(k) {
+    selectStage(k);
+    lives = 3; stars = 0; flamesLost = 0; runTime = 0; runFrom = k; newRecord = false;
+    starsEl.textContent = '✦ ' + num(0); drawLives();
+    shownFloor = -1; progKey = -1; hurtUntil = 0; jumpY = 0; jumpVy = 0; gapTips = 0;
+    endT = 0; beaconLit = false; beaconGrow = 0; endShown = false; musicOn = true;
+    mode = 'play';
+    nextHaz = time + 4.5; nextStar = time + 3;
+    document.body.classList.remove('title');
+    startEl.classList.add('hide');
+    endEl.classList.add('hide'); endEl.setAttribute('aria-hidden', 'true');
+    if (musicBus) musicBus.gain.value = 0.6;
+    enterStage(k, false);
+    if (k === 0) showHint('', ['اضغط مطوّلاً لتصعد، وانقر نقرة سريعة لتقفز', STAGES[0].tip], 8);
+    try { stage.focus({ preventScroll: true }); } catch (e) { /* تجاهل */ }
+  }
+  function toTitle() {
+    mode = 'title';
+    endT = 0; beaconLit = false; beaconGrow = 0; endShown = false; musicOn = true;
+    endEl.classList.add('hide'); endEl.setAttribute('aria-hidden', 'true');
+    document.body.classList.add('title');
+    startEl.classList.remove('hide');
+    hintEl.classList.add('gone'); bannerEl.classList.remove('on');
+    if (musicBus) musicBus.gain.value = 0.6;
+    buildChips(); updateRecord(); selectStage(0);
+    try { playEl.focus({ preventScroll: true }); } catch (e) { /* تجاهل */ }
+  }
   function relight() {
-    // يكمل من مكانه ولا يعود إلى الوراء
-    lives = 3; stars = 0; starsEl.textContent = '✦ ' + num(0); vel = 0;
+    // يكمل من مكانه ولا يعود إلى الوراء، ويخسر نجومه فقط
+    lives = 3; stars = 0; starsEl.textContent = '✦ ' + num(0);
     things.length = 0;
-    hurtUntil = time + 2.5; nextRock = time + 3.5; nextStar = time + 3;
+    hurtUntil = time + 2.5; nextHaz = time + 3.5; nextStar = time + 3;
     mode = 'play'; drawLives(); hintEl.classList.add('gone');
     if (musicBus) musicBus.gain.value = 0.6;
   }
-  drawLives();
-  starsEl.textContent = '✦ ' + num(0);
-  recordEl.textContent = best > 0 ? 'أعلى طابق بلغته: ' + num(best) : '';
-
+  function startSummit() {
+    mode = 'summit'; endT = 0;
+    things.length = 0; keys.clear(); pointerDown = false;
+    musicOn = false;
+    hintEl.classList.add('gone');
+    if (runFrom === 0 && (bestTime === 0 || runTime < bestTime)) { bestTime = Math.max(1, Math.round(runTime)); save('suood-time', bestTime); newRecord = true; }
+    liveEl.textContent = 'بلغتَ قمة البرج';
+  }
+  function showEnd() {
+    $('e-time').textContent = clock(runTime);
+    $('e-stars').textContent = num(stars);
+    $('e-lost').textContent = num(flamesLost);
+    $('e-note').textContent = runFrom > 0 ? 'بدأتَ من المرحلة ' + ORD[runFrom] + '. ابدأ من الأولى ليُحسب زمنك'
+      : newRecord ? 'هذا أسرع صعود لك' : 'أسرع صعود لك ' + clock(bestTime);
+    endEl.classList.remove('hide'); endEl.setAttribute('aria-hidden', 'false');
+    try { againEl.focus({ preventScroll: true }); } catch (e) { /* تجاهل */ }
+  }
   playEl.addEventListener('click', () => {
     if (mode !== 'title') return;
     audioInit(); startMusic();
-    document.body.classList.remove('title');
-    startEl.classList.add('hide');
-    mode = 'play';
-    nextRock = time + 4.5; nextStar = time + 4;
-    showHint('', ['انقر للقفز فوق البرميل — أو توقّف لينحني فوراً']);
-    banner(ZONES[0]);
-    try { stage.focus({ preventScroll: true }); } catch (e) { /* تجاهل */ }
+    beginRun(selStage);
   });
+  againEl.addEventListener('click', toTitle);
 
-  // ---------- التحكّم: صعود، قفز بنقرة سريعة، وانحناء فوري عند التوقف ----------
-  let pointerDown = false, dragMode = false, downAt = 0, moved = 0, lastX = 0, lastY = 0, lastT = 0, lastDragMoveAt = 0;
+  // ---------- التحكّم: ضغط للصعود، نقرة للقفز، ورفع الإصبع للانحناء ----------
+  let pointerDown = false, dragMode = false, downAt = 0, moved = 0, lastX = 0, lastY = 0, lastT = 0, lastDragMoveAt = 0, primaryId = -1;
   let jumpY = 0, jumpVy = 0, forceDuckUntil = 0;
   const keys = new Set();
-  const HOLD_SPEED = 4.4;
+  const HOLD_SPEED = 4.4, JUMP_FWD = 3.3;
   function advance(d) {
-    if (mode !== 'play' || !(d > 0)) return;
-    p += d;
-    if (p > 2) hintEl.classList.add('gone');
+    if (mode !== 'play' || !(d > 0) || jumpY > 0 || jumpVy > 0) return;   // في الهواء تحمله القفزة وحدها
+    let np = p + d;
+    // درجة مكسورة توقفه عند حافتها حتى يقفز
+    const g = nextGap(p);
+    if (g >= 0 && np > g - 0.72) { np = Math.max(p, g - 0.72); atGap = time; }
+    p = np > I_END ? I_END : np;
   }
   function triggerJump() {
     if (mode !== 'play') return;
-    if (jumpY <= 1) {
+    if (jumpY <= 1 && jumpVy <= 0) {
       jumpVy = 92;
       forceDuckUntil = 0;
       tone('triangle', 320, 620, 0.14, 0.08);
     }
   }
+  function landed() {
+    footstep(1);
+    // إن هبط فوق الفجوة أكمل إلى حافتها البعيدة
+    const g = Math.round(p);
+    if (gapAt(g) && Math.abs(p - g) < 0.6) p = g + 0.62;
+    bits.push({ x: cx + 8, Y: Math.round(p * SH * S - RM * TS) + 4, vx: -30, vy: 18, g: 80, life: 0.25, big: 0 });
+    bits.push({ x: cx - 6, Y: Math.round(p * SH * S - RM * TS) + 4, vx: 26, vy: 16, g: 80, life: 0.25, big: 0 });
+  }
   const tryRelight = () => { if (mode === 'dead' && time - deadAt > 0.8) relight(); };
   stage.addEventListener('pointerdown', e => {
     audioInit(); tryRelight();
-    pointerDown = true; dragMode = false; moved = 0; downAt = performance.now();
-    lastX = e.clientX; lastY = e.clientY; lastT = downAt; lastDragMoveAt = downAt; vel = 0;
+    if (pointerDown && e.pointerId !== primaryId) { triggerJump(); return; }      // إصبع ثانٍ أثناء الصعود = قفزة
+    pointerDown = true; primaryId = e.pointerId; dragMode = false; moved = 0; downAt = performance.now();
+    lastX = e.clientX; lastY = e.clientY; lastT = downAt; lastDragMoveAt = downAt;
     try { stage.setPointerCapture(e.pointerId); } catch (err) { /* تجاهل */ }
   });
   stage.addEventListener('pointermove', e => {
-    if (!pointerDown) return;
+    if (!pointerDown || e.pointerId !== primaryId) return;
     const now = performance.now();
     const dx = e.clientX - lastX, dy = e.clientY - lastY;
     const dist = Math.hypot(dx, dy);
     moved += dist;
     if (!dragMode && moved > 10) dragMode = true;
     if (dragMode) {
-      // سحب سريع للأسفل = انحناء فوري وتوقف تام
-      if (dy > 18 && Math.abs(dy) > Math.abs(dx) * 1.4) {
-        vel = 0;
-        forceDuckUntil = time + 0.6;
-      } else {
-        const d = dist / (TREAD_PX * PXC);
-        const dt = Math.max(1, now - lastT) / 1000;
-        vel = vel * 0.5 + (d / dt) * 0.5;
-        advance(d);
-        lastDragMoveAt = now;
-      }
+      if (dy > 18 && Math.abs(dy) > Math.abs(dx) * 1.4) forceDuckUntil = time + 0.6;   // سحب سريع للأسفل = انحناء
+      else { advance(dist / (TREAD_PX * PXC)); lastDragMoveAt = now; }
     }
     lastX = e.clientX; lastY = e.clientY; lastT = now;
   });
-  const endPointer = () => {
-    const now = performance.now();
-    // إذا كانت نقرة سريعة على الشاشة -> قفز فوق البرميل!
-    if (pointerDown && !dragMode && now - downAt < 220 && moved < 14) {
-      triggerJump();
-    }
-    pointerDown = false;
-    // إيقاف الانزلاق فوراً عند رفع الإصبع لكي تنحني الشخصية في نفس اللحظة بدون تأخير
-    vel = 0;
+  const endPointer = e => {
+    if (e.pointerId !== primaryId) return;
+    if (pointerDown && !dragMode && performance.now() - downAt < 220 && moved < 14) triggerJump();
+    pointerDown = false; primaryId = -1;
   };
   stage.addEventListener('pointerup', endPointer);
   stage.addEventListener('pointercancel', endPointer);
-  stage.addEventListener('wheel', e => { e.preventDefault(); advance(Math.min(2, (Math.abs(e.deltaY) + Math.abs(e.deltaX)) / 80)); }, { passive: false });
+  stage.addEventListener('wheel', e => { e.preventDefault(); advance(Math.min(2, (Math.abs(e.deltaY) + Math.abs(e.deltaX)) / 80)); lastDragMoveAt = performance.now(); }, { passive: false });
   window.addEventListener('keydown', e => {
-    if (e.target === muteEl || e.target === playEl) return;
-    if (mode === 'title') return;
-    if (e.key === ' ' || e.key === 'w' || e.key === 'ArrowUp') {
+    if (mode === 'title' || mode === 'summit') return;
+    if (e.target === muteEl) return;
+    const k = e.key;
+    if (k === ' ' || k === 'Spacebar') {
       audioInit(); tryRelight();
-      if (e.key === ' ') triggerJump();
-      keys.add(e.key); e.preventDefault();
-    } else if (['ArrowRight', 'd', 'Enter'].includes(e.key)) {
-      audioInit(); tryRelight(); keys.add(e.key); e.preventDefault();
-    } else if (['ArrowDown', 's'].includes(e.key)) {
-      // زر السهم السفلي للانحناء الفوري
-      keys.clear(); vel = 0; forceDuckUntil = time + 0.5; e.preventDefault();
+      if (!e.repeat) triggerJump();
+      e.preventDefault();
+    } else if (['ArrowUp', 'ArrowRight', 'w', 'd', 'Enter'].includes(k)) {
+      audioInit(); tryRelight(); keys.add(k); e.preventDefault();
+    } else if (['ArrowDown', 's'].includes(k)) {
+      keys.clear(); forceDuckUntil = time + 0.5; e.preventDefault();
     }
   });
   window.addEventListener('keyup', e => keys.delete(e.key));
-  window.addEventListener('blur', () => { keys.clear(); pointerDown = false; vel = 0; });
+  window.addEventListener('blur', () => { keys.clear(); pointerDown = false; primaryId = -1; });
 
-  // ---------- البراميل المتدحرجة على الدرج والنجوم ----------
+  // ---------- العقبات والنجوم ----------
   function burst(sx, Y, n, speed) {
     for (let i = 0; i < n; i++) {
       const a = Math.random() * Math.PI;
       bits.push({ x: sx, Y, vx: Math.cos(a) * speed * (0.4 + Math.random()), vy: Math.sin(a) * speed * (0.4 + Math.random()), g: 440, life: 0.4 + Math.random() * 0.5, big: 1 });
     }
   }
-  function spawn(kind, topW, speed) {
-    if (kind === 'barrel') {
-      // يبدأ البرميل من أعلى الدرج ويتدحرج قافزاً على الدرجات نزولاً نحو اللاعب
-      const startQ = p + 15 + Math.random() * 4;
-      const vq = 5.4 + Math.min(2.6, Math.floor(p / N) * 0.14);
-      things.push({
-        kind: 'barrel',
-        q: startQ,
-        vq,
-        y: startQ * SH,
-        lastBounce: Math.floor((startQ - p) / 1.7),
-        passed: false,
-        rot: 0
-      });
-      return;
+  function spawnHazard(st) {
+    if (p > I_END - 34) return;
+    const w = STAGES[st].haz;
+    let r = Math.random() * (w[0] + w[1] + w[2]);
+    if ((r -= w[0]) < 0) {
+      // برميل يتدحرج قافزاً على الدرجات نزولاً نحو المسافر
+      const q = Math.min(I_END - 2, p + 15 + Math.random() * 4);
+      things.push({ kind: 'barrel', q, vq: 5.4 + Math.min(2.4, st * 0.45), y: q * SH, lastBounce: Math.floor((q - p) / 1.7), passed: false, rot: 0, bounceH: 0 });
+    } else if ((r -= w[1]) < 0) {
+      // غراب يطير على ارتفاع الرأس
+      const q = Math.min(I_END - 2, p + 17 + Math.random() * 4);
+      things.push({ kind: 'raven', q, vq: 7 + st * 0.3, y: q * SH + 27, ph: Math.random() * 6, passed: false });
+      caw();
+    } else {
+      // حجر أو جليد يسقط حيث سيبلغ المسافر لو واصل
+      let q = Math.round(p + Math.max(2.5, spd * 1.75 + (Math.random() - 0.5) * 1.6));
+      if (gapAt(q)) q++;
+      if (q > I_END - 3) return;
+      things.push({ kind: 'fall', q, ty: q * SH, y: q * SH + 150, vy: 40, wait: 0.55, ice: st === 4, v: Math.random() < 0.5 ? 0 : 1 });
     }
-    const lead = 5 + speed + Math.random() * 8;
-    const q = Math.round(p + lead), ty = q * SH;
-    const y = Math.max(topW + 14, ty + 120);
-    things.push({ kind, q, y, ty, vy: 44, wait: 0, rest: 0, v: Math.random() < 0.5 ? 0 : 1 });
   }
-  function hit() {
-    lives--; drawLives();
-    hurtUntil = time + 2; shake = 0.3; vel = 0;
+  function spawnStar(kind) {
+    let q = Math.round(p + 5 + spd + Math.random() * 8);
+    if (gapAt(q)) q++;
+    if (q > I_END - 4) return;
+    things.push({ kind, q, y: q * SH + 130, ty: q * SH, vy: 46, rest: 0 });
+  }
+  function hit(why) {
+    lives--; flamesLost++; drawLives();
+    hurtUntil = time + 2; shake = 0.3;
     thud(900, 0.25, 0.5); tone('sawtooth', 220, 60, 0.35, 0.12); buzz(120);
     if (lives <= 0) {
       mode = 'dead'; deadAt = time;
@@ -1188,14 +1803,15 @@
       showHint('انطفأت الشعلة', [
         'بلغت الطابق ' + num(Math.floor(p / N)) + '، وأعلى ما وصلته ' + num(best),
         'اضغط لتشعلها وتكمل من مكانك'
-      ]);
+      ], 0, true);
       liveEl.textContent = 'انطفأت الشعلة';
-    } else liveEl.textContent = 'أصابك برميل. بقي ' + num(lives);
+    } else liveEl.textContent = why + '. بقي ' + num(lives);
   }
 
   // ---------- الإضاءة والمضلعات ----------
   const lights = [];              // x, y, d, R, R2 لكل مصدر
   let nl = 0;
+  let ambH = 0, ambV = 0, MK = 1; // ضوء عام على الأسطح الأفقية والرأسية (برق وفجر)، وقوة ضوء القمر
   function lightAt(wx, wy, wd) {
     let l = 0;
     for (let q = 0; q < nl; q += 5) {
@@ -1207,13 +1823,14 @@
     l = l * l * (3 - 2 * l) * 1.9;
     return l > 1 ? 1 : l;
   }
-  let camTopB = 0, cam = 0;
+  let camTopB = 0, cam = 0, shx = 0;
   // يملأ مضلعاً محدّباً بمادة m ويضيئه
   function fillPoly(pts, m, yf, df, ml, vert) {
     let minY = Infinity, maxY = -Infinity;
     const n = pts.length;
     for (let i = 1; i < n; i += 2) { if (pts[i] < minY) minY = pts[i]; if (pts[i] > maxY) maxY = pts[i]; }
     const y0 = Math.max(0, Math.ceil(minY - 0.5)), y1 = Math.min(H - 1, Math.ceil(maxY - 0.5) - 1);
+    const amb = ml * MK + (vert ? ambV : ambH);
     for (let y = y0; y <= y1; y++) {
       const yc = y + 0.5;
       let xL = Infinity, xR = -Infinity;
@@ -1227,44 +1844,74 @@
       const xs = Math.max(0, Math.ceil(xL - 0.5)), xe = Math.min(W - 1, Math.ceil(xR - 0.5) - 1);
       const wy = vert ? (camTopB - y) / S + df * TILT : yf;
       for (let x = xs, i = y * W + xs; x <= xe; x++, i++) {
-        const l = lightAt((x - cx) / S, wy, df) + ml;
+        const l = lightAt((x - cx) / S, wy, df) + amb;
         buf[i] = m * (l > 1 ? 1 : l);
       }
     }
   }
+
+  // مواد الدرج في كل مرحلة: [سطح، تفاوت، وجه الشفة، جسم الحافة، الجانب، احتمال الشرخ]
+  const STEP_MAT = [
+    [0.76, 0.18, 0.72, 0.42, 0.7, 0.3],
+    [0.7, 0.2, 0.66, 0.38, 0.62, 0.35],
+    [0.74, 0.14, 0.72, 0.42, 0.7, 0.25],
+    [0.5, 0.12, 0.9, 0.3, 0.5, 0.3],
+    [0.97, 0.03, 0.97, 0.5, 0.8, 0],
+    [0.9, 0.05, 0.8, 0.55, 0.8, 0]
+  ];
   function drawStep(i) {
+    const st = stageOfFloor(Math.min(TOP_FLOOR - 1, Math.floor(i / N))), M = STEP_MAT[st];
+    const broken = gapAt(i);
     const y = i * SH, ac = i * DA - cam, a0 = ac - DA / 2, a1 = ac + DA / 2;
     const s0 = Math.sin(a0), c0 = Math.cos(a0), s1 = Math.sin(a1), c1 = Math.cos(a1), cm = Math.cos(ac);
-    const base = camTopB - y * S, th = TH * S, lip = 3, RI = RW - 1, RN = RW + 4, RE = RS - 3;
-    const ix0 = cx + RI * s0 * S, iy0 = base + RI * c0 * TS, ox0 = cx + RS * s0 * S, oy0 = base + RS * c0 * TS;
-    const ix1 = cx + RI * s1 * S, iy1 = base + RI * c1 * TS, ox1 = cx + RS * s1 * S, oy1 = base + RS * c1 * TS;
+    const RO = broken ? RW + 7 : RS;                    // الدرجة المكسورة يبقى جذرها في الجدار
+    const base = camTopB - y * S, th = TH * S, lip = st === 4 ? 5 : 3, RI = RW - 1, RN = RW + 4, RE = RO - 3;
+    const ix0 = cx + RI * s0 * S, iy0 = base + RI * c0 * TS, ox0 = cx + RO * s0 * S, oy0 = base + RO * c0 * TS;
+    const ix1 = cx + RI * s1 * S, iy1 = base + RI * c1 * TS, ox1 = cx + RO * s1 * S, oy1 = base + RO * c1 * TS;
     const nx0 = cx + RN * s0 * S, ny0 = base + RN * c0 * TS, nx1 = cx + RN * s1 * S, ny1 = base + RN * c1 * TS;
     const ex0 = cx + RE * s0 * S, ey0 = base + RE * c0 * TS, ex1 = cx + RE * s1 * S, ey1 = base + RE * c1 * TS;
-    const mid = (RW + RS) / 2, tone = 0.76 + hash(i * 97 + 3) * 0.18;
+    const mid = (RW + RO) / 2, tone = (M[0] + hash(i * 97 + 3) * M[1]) * (broken ? 0.7 : 1);
     // القائمتان الجانبيتان (ما يواجه الناظر منهما)
-    if (s0 > 0) fillPoly([ix0, iy0, ox0, oy0, ox0, oy0 + th, ix0, iy0 + th], 0.7, y, mid * c0, Math.max(0, Math.cos(a0 + cam - Math.PI / 2 - MOON_A)) * 0.3, true);
-    if (s1 < 0) fillPoly([ix1, iy1, ox1, oy1, ox1, oy1 + th, ix1, iy1 + th], 0.7, y, mid * c1, Math.max(0, Math.cos(a1 + cam + Math.PI / 2 - MOON_A)) * 0.3, true);
+    if (s0 > 0) fillPoly([ix0, iy0, ox0, oy0, ox0, oy0 + th, ix0, iy0 + th], M[4], y, mid * c0, Math.max(0, Math.cos(a0 + cam - Math.PI / 2 - MOON_A)) * 0.3, true);
+    if (s1 < 0) fillPoly([ix1, iy1, ox1, oy1, ox1, oy1 + th, ix1, iy1 + th], M[4], y, mid * c1, Math.max(0, Math.cos(a1 + cam + Math.PI / 2 - MOON_A)) * 0.3, true);
     // الحافة الخارجية: شفة فاتحة فوق جسم أغمق
     if (cm > -0.2) {
       const mlr = Math.max(0, Math.cos(ac + cam - MOON_A)) * 0.3;
-      fillPoly([ox0, oy0 + lip, ox1, oy1 + lip, ox1, oy1 + th, ox0, oy0 + th], 0.42, y, RS * cm, mlr, true);
-      fillPoly([ox0, oy0, ox1, oy1, ox1, oy1 + lip, ox0, oy0 + lip], 0.72, y, RS * cm, mlr, true);
+      fillPoly([ox0, oy0 + lip, ox1, oy1 + lip, ox1, oy1 + th, ox0, oy0 + th], broken ? 0.2 : M[3], y, RO * cm, mlr, true);
+      fillPoly([ox0, oy0, ox1, oy1, ox1, oy1 + lip, ox0, oy0 + lip], broken ? 0.5 : M[2], y, RO * cm, mlr, true);
     }
     // السطح: ظل عند الجدار، بلاطة، ثم حافة لامعة
     fillPoly([ix0, iy0, nx0, ny0, nx1, ny1, ix1, iy1], 0.45, y, RW * cm, 0.1, false);
     fillPoly([nx0, ny0, ex0, ey0, ex1, ey1, nx1, ny1], tone, y, mid * cm, 0.22, false);
-    fillPoly([ex0, ey0, ox0, oy0, ox1, oy1, ex1, ey1], 1, y, RS * cm, 0.3, false);
-    // فاصل بين بلاطتي السطح
-    const RJ = RW + 11, jw = 0.45;
-    fillPoly([cx + (RJ - jw) * s0 * S, base + (RJ - jw) * c0 * TS, cx + (RJ + jw) * s0 * S, base + (RJ + jw) * c0 * TS,
-      cx + (RJ + jw) * s1 * S, base + (RJ + jw) * c1 * TS, cx + (RJ - jw) * s1 * S, base + (RJ - jw) * c1 * TS], tone * 0.62, y, RJ * cm, 0.14, false);
-    // شرخ قديم في بعض الدرجات
+    fillPoly([ex0, ey0, ox0, oy0, ox1, oy1, ex1, ey1], broken ? 0.6 : 1, y, RO * cm, 0.3, false);
+    if (broken) return;
+    const band = (r0, r1, m, ml) => fillPoly([cx + r0 * s0 * S, base + r0 * c0 * TS, cx + r1 * s0 * S, base + r1 * c0 * TS,
+      cx + r1 * s1 * S, base + r1 * c1 * TS, cx + r0 * s1 * S, base + r0 * c1 * TS], m, y, (r0 + r1) * 0.5 * cm, ml, false);
     const hc = hash(i * 53 + 11);
-    if (hc < 0.3) {
+    if (st === 3) {
+      // بلل: برك تلمع على بعض الدرجات
+      if (hc < 0.55) band(RW + 7 + hc * 8, RW + 10.5 + hc * 8, 1, 0.3);
+    } else if (st === 5) {
+      band(RS - 7.2, RS - 6.3, 0.45, 0.14);             // خط مطعَّم قرب الحافة
+    } else if (st !== 4) {
+      band(RW + 10.55, RW + 11.45, tone * 0.62, 0.14);  // فاصل بين بلاطتين
+      if (st === 1 && hc > 0.6) band(RN, RN + 3 + hc * 4, 0.42, 0.1);   // طحلب يزحف من الجدار
+    }
+    // شرخ قديم في بعض الدرجات
+    if (hc < M[5]) {
       const fa = a0 + DA * (0.25 + hc * 1.6), sf = Math.sin(fa), cf = Math.cos(fa), sg = Math.sin(fa + 0.022), cg = Math.cos(fa + 0.022);
       const r0 = RW + 5 + hc * 20, r1 = RS - 3;
       fillPoly([cx + r0 * sf * S, base + r0 * cf * TS, cx + r1 * sf * S, base + r1 * cf * TS,
         cx + r1 * sg * S, base + r1 * cg * TS, cx + r0 * sg * S, base + r0 * cg * TS], 0.3, y, mid * cm, 0.06, false);
+    }
+    // دلّايات جليد تحت حافة الدرجة
+    if (st === 4 && cm > 0.15) {
+      for (let k = 0; k < 2; k++) {
+        const hk = hash(i * 31 + k * 7 + 2);
+        if (hk < 0.3) continue;
+        const fa = a0 + DA * (0.22 + k * 0.5 + hk * 0.1), px = cx + RS * Math.sin(fa) * S, py = base + RS * Math.cos(fa) * TS + th;
+        fillPoly([px - 2, py, px + 2, py, px, py + 5 + hk * 9], 0.97, y - TH, RS * cm, 0.3, true);
+      }
     }
   }
   // دعامة مثلثة تحمل الدرجة، تظهر من الجانب
@@ -1287,106 +1934,289 @@
     }
   }
 
-  // ---------- الإطار ----------
-  const INK = [0xec, 0xe6, 0xfb];
-  let prev = performance.now(), lastP = 0, spd = 0, capeBlow = 0, duckPose = 0;
-  const stepList = [];
-  const cl = new Float32Array(64);
-
-  function frame(now) {
-    const dt = Math.min(0.05, (now - prev) / 1000); prev = now; time += dt;
-
-    let frameStep = 0;
-    if (mode === 'play') {
-      const holding = pointerDown && !dragMode && now - downAt > 150 && time >= forceDuckUntil;
-      if (holding) advance(HOLD_SPEED * dt);
-      if (keys.size && time >= forceDuckUntil) advance(4.8 * dt);
-      frameStep = p - lastP;
-    }
-    spd = spd * 0.75 + (frameStep / Math.max(dt, 0.001)) * 0.25; lastP = p;
-    capeBlow += (Math.min(1, spd / 5) - capeBlow) * Math.min(1, dt * 6);
-
-    // فيزياء القفز فوق البراميل
-    if (jumpY > 0 || jumpVy > 0) {
-      jumpY += jumpVy * dt;
-      jumpVy -= 260 * dt;
-      if (jumpY <= 0) {
-        jumpY = 0; jumpVy = 0;
-        footstep(1);
+  // ---------- سطح البرج والمنارة ----------
+  function drawRoof() {
+    const base = camTopB - TOPY * S;
+    if (base - RC * TILT - MERLON * S > H || base + RC * TILT < 0) return;
+    for (let sx = tx0; sx <= tx1; sx++) {
+      const k = sx - tx0, dep = colDep[k], yb = base - dep, xw = colXw[k];
+      // الشرفات الخلفية تُرى من داخلها
+      if (mod((cam + Math.PI - colPhi[k]) / TAU * 18, 1) <= 0.56) {
+        const l = lightAt(xw, TOPY + 4, -colDw[k]) * 0.8 + 0.14 * MK + ambV;
+        for (let sy = Math.max(0, yb - MERLON * S); sy < yb && sy < H; sy++) buf[sy * W + sx] = (sy === yb - MERLON * S ? 0.8 : 0.34) * (l > 1 ? 1 : l);
+      }
+      // بلاط السطح: حلقات حول المنارة
+      for (let sy = Math.max(0, yb), e = Math.min(H - 1, base + dep); sy <= e; sy++) {
+        const wd = (sy - base) / TS, r = Math.hypot(xw, wd);
+        const ring = Math.floor(r / 9), segs = 6 + ring * 4;
+        const fa = mod((Math.atan2(xw, wd) + cam) / TAU * segs + ring * 0.37, segs);
+        const m = mod(r, 9) < 0.7 || fa - Math.floor(fa) < 0.05 ? 0.16 : 0.5 + hash(ring * 71 + Math.floor(fa) * 13) * 0.2;
+        const l = lightAt(xw, TOPY, wd) + 0.2 * MK + ambH;
+        buf[sy * W + sx] = m * (l > 1 ? 1 : l);
       }
     }
+  }
+  // المنارة: عمود حجري مستدقّ فوقه سلّة حديد، ولهب كبير حين تُشعل
+  const BEACON_H = 58;
+  function drawBeacon(t) {
+    const base = camTopB - TOPY * S, bx = cx + shx;
+    if (base < -20 || base - 210 > H) return;
+    const k = Math.min(1, 0.32 + lightAt(0, TOPY + 14, 12) + ambV + 0.22 * MK);
+    for (let y = 0; y < BEACON_H; y++) {
+      const hw = y < 4 ? 15 : y < 8 ? 13 : y >= BEACON_H - 5 ? 12 : Math.round(11 - y / BEACON_H * 3.5);
+      const dark = y === 4 || y === 8 || y === BEACON_H - 5 || (y > 8 && y < BEACON_H - 5 && (y - 8) % 8 === 0);
+      for (let x = -hw; x <= hw; x++) {
+        const e = x / hw;
+        put(bx + x, base - y, x === -hw || x === hw ? 0 : (dark ? 0.14 : 0.3 + 0.62 * Math.sqrt(1 - e * e) * (x < 0 ? 0.62 : 1)) * k);
+      }
+    }
+    const by = base - BEACON_H;
+    for (let y = 0; y < 13; y++) {
+      const hw = 9 + Math.round(y * 0.55);
+      for (let x = -hw; x <= hw; x++) put(bx + x, by - y, x === -hw || x === hw || y === 12 || y === 0 || (x + 100) % 4 === 0 ? 0.92 * Math.max(k, 0.5) : 0.04);
+    }
+    if (beaconGrow <= 0) return;
+    // ألسنة لهب متراكبة تتمايل
+    const fy = by - 11, g = beaconGrow;
+    glow(bx, fy - 26 * g, 26 + 96 * g, 0.85 * g);
+    for (let j = 0; j < 5; j++) {
+      const h = g * (34 + 22 * hash(j * 7 + 1) + 7 * Math.sin(t * (7 + j) + j * 2)), w = g * (15 - Math.abs(j - 2) * 3.4), off = (j - 2) * 5.2 * g;
+      for (let y = 0; y < h; y++) {
+        const f = y / h, hw = w * Math.sin(Math.PI * Math.pow(f, 0.55)) * (1 - f * 0.25) + 1;
+        const sway = Math.sin(t * 5.3 + y * 0.085 + j * 1.9) * f * 6;
+        for (let x = -hw - 1; x <= hw + 1; x++) put(Math.round(bx + off + sway + x), Math.round(fy - y), Math.abs(x) > hw ? 0.2 : 1);
+      }
+    }
+    for (let y = 2; y < 16 * g; y++) {       // قلب أدكن عند القاعدة
+      const hw = (5 - y * 0.28) * g;
+      for (let x = -hw; x <= hw; x++) put(Math.round(bx + x + Math.sin(t * 6 + y * 0.2) * 1.2), Math.round(fy - y), 0.5);
+    }
+  }
+  // حزمتا ضوء تدوران كفنار
+  function drawBeams(t) {
+    if (beaconGrow < 0.4 || reduceMotion) return;
+    const base = camTopB - TOPY * S, ox = cx + shx, oy = base - BEACON_H - 34, k = (beaconGrow - 0.4) / 0.6;
+    for (let b = 0; b < 2; b++) {
+      const th = t * 0.55 + b * Math.PI, dx = Math.cos(th), dy = Math.sin(th) * TILT - 0.06;
+      const len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len, L = 460 * (0.35 + 0.65 * Math.abs(dx));
+      for (let s = 14; s < L; s++) {
+        const hw = 2 + s * 0.075, px = ox + ux * s, py = oy + uy * s, a = 0.42 * k * (1 - s / L);
+        for (let w = -hw; w <= hw; w++) addPx(Math.round(px - uy * w), Math.round(py + ux * w), a * (1 - Math.abs(w) / (hw + 1)));
+      }
+    }
+  }
 
-    // تحديد فوري لما إذا كان اللاعب يصعد أم متوقفاً (بدون أي تأخير بسبب القصور الذاتي)
+  // ---------- جسيمات الجو: مطر وثلج وأوراق ويراعات وشرر ----------
+  const rainP = [], snowP = [], leafP = [], flyP = [], sparkP = [], motes = [];
+  let rainSlant = -0.3;
+  function fit(arr, n, make) { while (arr.length < n) arr.push(make()); if (arr.length > n) arr.length = n; }
+  function updateWeather(dt, dCam) {
+    const area = W * H / 170000, calm = reduceMotion ? 0.4 : 1;
+    rainSlant = -0.3 - 0.1 * Math.sin(time * 0.4);
+    fit(rainP, Math.round(env.rain * 150 * area * calm), () => ({ x: Math.random() * (W + 80) - 20, y: Math.random() * H, z: Math.random() < 0.4 ? 1 : 0 }));
+    for (const r of rainP) {
+      const vy = r.z ? 560 : 400;
+      r.y += vy * dt + dCam * 0.5; r.x += vy * rainSlant * dt;
+      if (r.y > H + 16) { r.y = -Math.random() * 40; r.x = Math.random() * (W + 140) - 10; }
+      if (r.x < -20) r.x += W + 40;
+    }
+    fit(snowP, Math.round(env.snow * 120 * area * calm), () => ({ x: Math.random() * W, y: Math.random() * H, z: Math.random() < 0.35 ? 1 : 0, ph: Math.random() * 6, v: 26 + Math.random() * 40 }));
+    for (const s of snowP) {
+      s.y += s.v * (s.z ? 1.5 : 1) * dt + dCam * (s.z ? 0.9 : 0.4);
+      s.x += (Math.sin(time * 1.3 + s.ph) * 16 - 22) * dt;
+      if (s.y > H + 4) { s.y = -4; s.x = Math.random() * W; }
+      if (s.x < -4) s.x += W + 8;
+    }
+    fit(leafP, Math.round(env.leaf * 9 * area * calm), () => ({ x: Math.random() * W, y: Math.random() * H, ph: Math.random() * 6 }));
+    for (const l of leafP) {
+      l.y += (30 + l.ph * 4) * dt + dCam * 0.8;
+      l.x += (Math.sin(time * 2 + l.ph) * 30 - 24) * dt;
+      if (l.y > H + 4) { l.y = -4; l.x = Math.random() * W; }
+      if (l.x < -4) l.x += W + 8;
+    }
+    fit(flyP, Math.round(env.fly * 9 * area), () => ({ x: Math.random() * W, y: Math.random() * H, ph: Math.random() * 6 }));
+    for (const f of flyP) {
+      f.x += Math.sin(time * 0.7 + f.ph) * 10 * dt;
+      f.y += Math.cos(time * 0.9 + f.ph * 1.3) * 8 * dt + dCam * 0.85;
+      if (f.y > H + 10) { f.y = -8; f.x = Math.random() * W; }
+    }
+    fit(sparkP, Math.round(env.rune * 16 * area * calm), () => ({ x: cx + (Math.random() * 2 - 1) * 130, y: Math.random() * H, ph: Math.random() * 6 }));
+    for (const s of sparkP) {
+      s.y += -(14 + s.ph * 3) * dt + dCam * 0.9;
+      s.x += Math.sin(time * 2 + s.ph) * 8 * dt;
+      if (s.y < -6) { s.y = H + Math.random() * 20; s.x = cx + (Math.random() * 2 - 1) * 130; }
+      if (s.y > H + 30) s.y = -5;
+    }
+  }
+  function drawWeather(front) {
+    for (const r of rainP) {
+      if (!!r.z !== front) continue;
+      const len = front ? 9 : 5, v = front ? 0.85 : 0.42;
+      for (let k = 0; k < len; k++) put(Math.round(r.x - k * rainSlant), Math.round(r.y - k), v);
+    }
+    for (const s of snowP) {
+      if (!!s.z !== front) continue;
+      const x = Math.round(s.x), y = Math.round(s.y);
+      if (front) { put(x, y, 1); put(x + 1, y, 1); put(x, y + 1, 1); } else put(x, y, 0.7);
+    }
+    if (!front) return;
+    for (const l of leafP) {
+      const sh = LEAF[Math.floor(time * 5 + l.ph) % 3], x = Math.round(l.x), y = Math.round(l.y);
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) if (sh[r][c] === '#') put(x + c, y + r, 0.85);
+    }
+    for (const f of flyP) {
+      if (Math.sin(time * 2.2 + f.ph * 5) < -0.2) continue;
+      const x = Math.round(f.x), y = Math.round(f.y);
+      put(x, y, 1); addPx(x - 1, y, 0.4); addPx(x + 1, y, 0.4); addPx(x, y - 1, 0.4); addPx(x, y + 1, 0.4);
+    }
+    for (const s of sparkP) if (Math.sin(time * 6 + s.ph * 3) > -0.5) put(Math.round(s.x), Math.round(s.y), 1);
+  }
+
+  // ---------- البرق ----------
+  let flash = 0, nextBolt = 5, bolt = null, turbo = 1;
+  function strike() {
+    const side = Math.random() < 0.5 ? -1 : 1;
+    const pts = [0, 0];
+    let x = 0, y = 0;
+    while (y < H * 0.6) { y += 8 + Math.random() * 16; x += (Math.random() * 2 - 1) * 15; pts.push(x, y); }
+    const mid = (pts.length >> 2) * 2, br = [pts[mid], pts[mid + 1]];
+    for (let k = 1; k < 5; k++) br.push(br[0] + side * k * 9 + Math.random() * 6, br[1] + k * 12 + Math.random() * 6);
+    bolt = { x: cx + side * (W * 0.3 + Math.random() * W * 0.14), side, pts, br, t: 0.2 };
+    if (!reduceMotion) flash = 0.55;
+    thunder(0.25 + Math.random() * 0.7);
+  }
+
+  // ---------- الإطار ----------
+  let prev = performance.now(), prevCam = 0, perfAcc = 0, perfN = 0, slowRuns = 0, ambT = 0, chirpT = 4, camPan = 0, breathT = 0, lastGapTip = -9;
+  const stepList = [];
+  const cl = new Float32Array(100);
+
+  function frame(now) {
+    const rawDt = (now - prev) / 1000; prev = now;
+    const dt = Math.min(0.05, Math.max(0, rawDt)); time += dt;
+    if (fadeT < 1) fadeT = Math.min(1, fadeT + dt * 1.8);
+    if (time > hintUntil) { hintEl.classList.add('gone'); hintUntil = Infinity; }
+
+    // ---- الحركة ----
+    const airborne = jumpY > 0 || jumpVy > 0;
+    if (mode === 'play') {
+      runTime += dt;
+      const holding = pointerDown && !dragMode && now - downAt > 150 && time >= forceDuckUntil;
+      if (holding) advance(HOLD_SPEED * turbo * dt);
+      if (keys.size && time >= forceDuckUntil) advance(4.8 * dt);
+      if (airborne) p = Math.min(I_END, p + JUMP_FWD * dt);       // القفزة تحمله إلى الأمام
+    }
+    spd = spd * 0.75 + ((p - lastP) / Math.max(dt, 0.001)) * 0.25; lastP = p;
+    capeBlow += (Math.min(1, spd / 5) - capeBlow) * Math.min(1, dt * 6);
+    if (airborne) {
+      jumpY += jumpVy * dt;
+      jumpVy -= 260 * dt;
+      if (jumpY <= 0) { jumpY = 0; jumpVy = 0; landed(); }
+    }
+    const blocked = time - atGap < 0.12;
     const activelyDragging = pointerDown && dragMode && (now - lastDragMoveAt < 75);
     const activelyHolding = pointerDown && !dragMode && (now - downAt > 150);
-    const isClimbing = mode === 'play' && time >= forceDuckUntil && (
-      activelyDragging || activelyHolding || keys.size > 0
-    );
-
-    // استجابة فورية للانحناء (خلال جزء من الثانية) عند التوقف أو اقتراب برميل
+    isClimbing = mode === 'play' && time >= forceDuckUntil && !blocked && (activelyDragging || activelyHolding || keys.size > 0);
     const targetDuck = (!isClimbing && jumpY <= 1 && mode === 'play') ? 1 : 0;
     duckPose += (targetDuck - duckPose) * Math.min(1, dt * 38);
+    if (blocked && mode === 'play' && gapTips < 3 && time - lastGapTip > 5) {
+      gapTips++; lastGapTip = time;
+      showHint('', ['انقر لتقفز فوق الدرجة المكسورة'], 2.8);
+    }
 
-    const meY = p * SH, floor = Math.floor(p / N);
-    if (mode !== 'title') onFloor(floor);
+    // ---- القمة: شرارة من المشعل تشعل المنارة ----
+    if (mode === 'play' && p >= I_END - 0.001 && jumpY <= 0) startSummit();
+    let endK = 0, raise = 0;
+    if (mode === 'summit') {
+      endT += dt;
+      if (!beaconLit && endT > 1.5) { beaconLit = true; fanfare(); thud(140, 0.9, 0.5); buzz(60); shake = 0.15; }
+      if (beaconLit) beaconGrow = Math.min(1, beaconGrow + dt / 1.8);
+      if (!endShown && endT > 5.4) { endShown = true; showEnd(); }
+      endK = sstep(1.5, 8.5, endT);
+      raise = Math.min(sstep(0, 0.45, endT), 1 - sstep(2.2, 3.4, endT));
+    }
+    camPan += ((mode === 'summit' ? 0.11 : 0) - camPan) * Math.min(1, dt * 1.3);
+
+    const meY = p * SH, alt = p / N, floor = Math.floor(alt + 1e-6);
+    const st = stageOfFloor(Math.min(TOP_FLOOR - 1, floor));
+    updateEnv(alt, endK); updatePalette(alt);
+    if (mode !== 'title') { onFloor(floor); updateProg(alt); }
     cam = p * DA;
 
-    // الكاميرا ثابتة على الشخصية وتصعد بانسياب، والبرج هو الذي يدور
-    let shx = 0, shy = 0;
-    if (shake > 0) { shake -= dt; if (!reduceMotion) { shx = Math.round(Math.random() * 6 - 3); shy = Math.round(Math.random() * 6 - 3); } }
+    // الكاميرا ثابتة على المسافر وتصعد بانسياب، والبرج هو الذي يدور
+    shx = 0;
+    let shy = 0;
+    if (shake > 0) { shake -= dt; if (!reduceMotion) { shx = Math.round(Math.random() * 2 - 1); shy = Math.round(Math.random() * 2 - 1); } }
     const feetY = Math.round(meY * S - RM * TS);
-    camTopB = feetY + Math.round(H * 0.62) + shy;
+    camTopB = feetY + Math.round(H * (0.62 + camPan)) + shy;
+    let dCam = camTopB - prevCam; prevCam = camTopB;
+    if (dCam > 60 || dCam < -60) dCam = 0;
     const feetSy = camTopB - feetY - Math.round(jumpY * S);
     const topW = (camTopB + RM * TS) / S, botW = topW - H / S;
     const VX = (r, a) => cx + r * Math.sin(a - cam) * S + shx;
     const VY = (r, a, y) => camTopB - (y * S - r * Math.cos(a - cam) * TS);
+    prefetchChunk(Math.floor((camTopB + RC * TILT) / CH) + 1, 5 + Math.min(40, Math.abs(dCam) * 3));
 
     // كل قدم تحطّ على درجة: صوت خفيف وغبار
     const footNow = Math.floor(p + 0.5);
     if (footNow !== lastFoot) {
       lastFoot = footNow;
-      if (time - lastStepAt > 0.1) {
+      if (time - lastStepAt > 0.1 && mode === 'play' && jumpY <= 0) {
         lastStepAt = time;
         footstep(footNow & 1);
         bits.push({ x: cx + 12, Y: feetY + 6, vx: -24, vy: 14, g: 80, life: 0.22, big: 0 });
       }
     }
 
-    // مصادر الضوء: المشعل، المواقد، مشاعل الجدار
-    const flick = reduceMotion ? 0 : Math.sin(time * 13) * 2 + Math.sin(time * 7.3) * 1.6;
+    // ---- مصادر الضوء: المشعل، المواقد، مشاعل الجدار، المنارة ----
+    const flick = reduceMotion ? 0 : Math.sin(time * 13) * 2 + Math.sin(time * 7.3) * 1.6 + env.rain * Math.sin(time * 23) * 2.2;
     const fade = mode === 'dead' ? Math.max(0.2, 1 - (time - deadAt) * 1.2) : 1;
-    const R = (Math.min(108, Math.max(72, W / S * 0.72)) + flick) * fade;
-    const tx = 7.5, ty = meY + 30, td = RM + 2;
+    const R = (Math.min(108, Math.max(72, W / S * 0.72)) * (1 - env.rain * 0.12) + flick) * fade;
+    const tx = 7.5, ty = meY + 30 + jumpY - duckPose * 8, td = RM + 2;
     lights.length = 0;
     lights.push(tx, ty, td, R, R * R);
     const braziers = [], sconces = [];
-    for (let m = CP_EVERY; ; m += CP_EVERY) {
+    for (const m of CHECKPOINTS) {
       const y = m * REV;
-      if (y > topW + 30) break;
-      if (y < botW - 60) continue;
+      if (y > topW + 30 || y < botW - 60) continue;
       const lit = m <= reached, c = Math.cos(-cam);
       braziers.push({ y, lit, c });
       if (lit && c > -0.3) { const r = 56 - flick; lights.push((RW + 7) * Math.sin(-cam), y + 16, (RW + 7) * c, r, r * r); }
     }
     for (let i = Math.ceil((botW / SH - N / 2) / N) * N + N / 2; i * SH < topW; i += N) {
       if (i < N / 2) continue;
-      const a = i * DA, c = Math.cos(a - cam);
-      if (c < 0.05) continue;
-      const y = i * SH + 46;
+      const a = i * DA, c = Math.cos(a - cam), y = i * SH + 46;
+      if (c < 0.05 || y + 12 > TOPY) continue;
       sconces.push({ a, y });
       const r = 34 + flick * 0.5;
       lights.push((RW + 4) * Math.sin(a - cam), y + 5, (RW + 4) * c, r, r * r);
     }
+    if (beaconGrow > 0) { const r = 70 + 200 * beaconGrow + flick * 2; lights.push(0, TOPY + 46, 0, r, r * r); }
     nl = lights.length;
 
-    // حركة البراميل المتدحرجة على الدرج والنجوم
+    // البرق وضوء الفجر
+    if (env.rain > 0.5 && mode !== 'summit') { nextBolt -= dt; if (nextBolt <= 0) { strike(); nextBolt = 5 + Math.random() * 6; } }
+    if (flash > 0) { flash *= Math.exp(-dt * 3.4); if (flash < 0.02) flash = 0; }
+    if (bolt) { bolt.t -= dt; if (bolt.t <= 0) bolt = null; }
+    MK = env.moon;
+    ambH = flash * 0.75 + env.dawn * 0.5;
+    ambV = flash * 0.5 + env.dawn * 0.3;
+    ambT -= dt;
+    if (ambT <= 0) { ambT = 0.5; setAmbience(); }
     if (mode === 'play') {
-      if (time > nextRock && p > 4) {
-        spawn('barrel', topW, spd);
-        nextRock = time + Math.max(2.0, 4.0 - floor * 0.07) * (0.8 + Math.random() * 0.45);
+      chirpT -= dt;
+      if (chirpT <= 0) { chirpT = 2.5 + Math.random() * 4; if ((env.fly > 0.5 && env.over < 0.2) || env.dawn > 0.25) chirp(); }
+    }
+
+    // ---- العقبات والنجوم ----
+    if (mode === 'play') {
+      if (time > nextHaz && p > STAGE_START[runFrom] * N + 4) {
+        spawnHazard(st);
+        const ev = STAGES[st].every;
+        nextHaz = time + ev[0] + Math.random() * (ev[1] - ev[0]);
       }
       if (time > nextStar) {
-        spawn(lives < 3 && Math.random() < 0.3 ? 'ember' : 'star', topW, spd);
+        spawnStar(lives < 3 && Math.random() < 0.3 ? 'ember' : 'star');
         nextStar = time + 3 + Math.random() * 4;
       }
     }
@@ -1396,19 +2226,11 @@
         o.q -= o.vq * dt;
         o.rot += o.vq * dt * 3.2;
         if (o.q < p - 9) { things.splice(i, 1); continue; }
-
-        // قفز البرميل على الدرجات بحيث يرتكز على الدرج قبل وبعد اللاعب ويعلو في قوس فوق موقع اللاعب تماماً
-        const relQ = o.q - p;
-        const bouncePeriod = 1.7;
-        const bounceArc = Math.abs(Math.cos(relQ * Math.PI / bouncePeriod));
-        const jumpHeight = (relQ > -1.0 && relQ < 1.0) ? 26 : 16;
-        o.bounceH = bounceArc * jumpHeight;
+        // يرتكز على الدرج قبل المسافر وبعده، ويعلو في قوس فوق موضعه
+        const relQ = o.q - p, bouncePeriod = 1.7;
+        o.bounceH = Math.abs(Math.cos(relQ * Math.PI / bouncePeriod)) * ((relQ > -1 && relQ < 1) ? 26 : 16);
         o.y = o.q * SH + o.bounceH + 3;
-
-        const a = o.q * DA, rel = Math.cos(a - cam);
-        const osx = VX(RM, a), front = rel > -0.15;
-
-        // صوت ارتطام البرميل بالدرج وتطاير الغبار عند ملامسته لحافة الدرجة
+        const a = o.q * DA, rel = Math.cos(a - cam), osx = VX(RM, a), front = rel > -0.15;
         const bIdx = Math.floor((relQ + bouncePeriod * 0.5) / bouncePeriod);
         if (bIdx !== o.lastBounce) {
           o.lastBounce = bIdx;
@@ -1417,28 +2239,57 @@
             thud(320, 0.09, Math.max(0.06, 0.24 * (1 - Math.abs(relQ) / 10)));
           }
         }
-        // التحقق من الاصطدام أو المرور السليم (إما بالقفز فوق البرميل أو التوقف والانحناء الفوري تحته)
         if (mode === 'play' && Math.abs(relQ) < 0.48) {
-          const safeByJump = jumpY > 8.5;
-          const safeByDuck = !isClimbing || duckPose > 0.55;
-          if (!safeByJump && !safeByDuck && time > hurtUntil) {
-            // يصطدم فقط إذا كان يركض على الأرض مباشرة في البرميل بدون قفز أو توقف
+          const safe = jumpY > 8.5 || !isClimbing || duckPose > 0.55;
+          if (!safe && time > hurtUntil) {
             burst(osx, o.y * S - RM * rel * TS, 14, 140);
             things.splice(i, 1);
-            hit();
+            hit('أصابك برميل');
             continue;
-          } else if (!o.passed && relQ <= 0) {
-            o.passed = true;
-            tone('sine', 540, 760, 0.14, 0.06);
+          } else if (!o.passed && relQ <= 0) { o.passed = true; tone('sine', 540, 760, 0.14, 0.06); }
+        }
+      } else if (o.kind === 'raven') {
+        o.q -= o.vq * dt;
+        if (o.q < p - 9) { things.splice(i, 1); continue; }
+        const relQ = o.q - p;
+        o.y = o.q * SH + 27 + Math.sin(time * 6 + o.ph) * 2.5;
+        if (mode === 'play' && !o.passed && Math.abs(relQ) < 0.5) {
+          // ينجو المنحني فقط؛ القافز يصطدم به
+          const safe = (!isClimbing || duckPose > 0.55) && jumpY < 6;
+          if (!safe && time > hurtUntil) {
+            const a = o.q * DA;
+            burst(VX(RM, a), o.y * S - RM * Math.cos(a - cam) * TS, 10, 110);
+            things.splice(i, 1);
+            hit('أصابك غراب');
+            continue;
+          } else if (relQ <= 0) { o.passed = true; tone('sine', 540, 760, 0.14, 0.06); }
+        }
+      } else if (o.kind === 'fall') {
+        const a = o.q * DA, rel = Math.cos(a - cam), osx = VX(RM, a), front = rel > -0.1;
+        if (o.q < p - 4) { things.splice(i, 1); continue; }
+        if (o.wait > 0) {
+          o.wait -= dt;
+          if (front && Math.random() < dt * 26) bits.push({ x: osx + Math.random() * 14 - 7, Y: camTopB, vx: 0, vy: -260 - Math.random() * 120, g: 0, life: 0.6, big: 0 });
+          continue;
+        }
+        o.vy += 170 * dt; o.y -= o.vy * dt;
+        if (o.y <= o.ty + 2) {
+          if (front) burst(osx, o.ty * S - RM * rel * TS + 2, o.ice ? 16 : 12, 120);
+          if (front && Math.abs(o.ty - meY) < 90) {
+            shake = Math.max(shake, 0.12);
+            if (o.ice) { tone('sine', 2600, 1700, 0.18, 0.06); tone('sine', 3300, 2100, 0.22, 0.05, 0.04); thud(600, 0.12, 0.2); }
+            else { thud(260, 0.3, 0.35); tone('sine', 90, 40, 0.25, 0.18); }
           }
+          const struck = mode === 'play' && Math.abs(o.q - p) < 0.75 && jumpY < 14 && time > hurtUntil;
+          things.splice(i, 1);
+          if (struck) hit(o.ice ? 'أصابك الجليد' : 'أصابك حجر');
         }
       } else {
-        const a = o.q * DA, rel = Math.cos(a - cam);
-        const osx = VX(RM, a);
         if (o.q < p - 3) { things.splice(i, 1); continue; }
         if (o.rest === 0) { o.y -= o.vy * dt; if (o.y <= o.ty + 6) { o.y = o.ty + 6; o.rest = time; } }
-        if (mode === 'play' && Math.abs(o.q - p) < 0.9 && Math.abs(o.y - (meY + 10)) < 20) {
-          burst(osx, o.y * S - RM * TS + 6, 10, 90);
+        if (mode === 'play' && Math.abs(o.q - p) < 0.9 && Math.abs(o.y - (meY + jumpY + 10)) < 22) {
+          const a = o.q * DA;
+          burst(VX(RM, a), o.y * S - RM * TS + 6, 10, 90);
           if (o.kind === 'ember') {
             if (lives < 3) { lives++; drawLives(); }
             liveEl.textContent = 'عادت إليك شعلة';
@@ -1453,21 +2304,57 @@
         }
       }
     }
+    updateWeather(dt, dCam);
 
-    // ---- 1: السماء والصخرة ----
+    // ---- 1: السماء والأفق والصخرة ----
     const skyOff = cam * SKY_K, starV = Math.floor(camTopB * 0.05), cloudV = Math.floor(camTopB * 0.11);
-    const cloudOff = skyOff - (reduceMotion ? 0 : time * 5);
+    const drift = reduceMotion ? 0 : time;
+    const cloudOff = skyOff - drift * 5, cloudOff2 = skyOff * 0.6 - drift * 16, seaOff = skyOff - drift * 2.2;
+    const cloudV2 = Math.floor(camTopB * 0.3 + drift * 6), seaRow = Math.floor(camTopB * 0.2);
     const moonX = cx + wrap(cam - (MOON_A + Math.PI)) * SKY_K, moonY = H * 0.24;
+    const sunX = cx + wrap(cam - (SUN_A + Math.PI)) * SKY_K;
     const MR = Math.max(22, Math.min(34, W * 0.1)), MR2 = MR * MR, HALO = MR + 18, HALO2 = HALO * HALO;
-    const twk = Math.floor(time * 3);
     const MGL = MR * 4.5, MGL2 = MGL * MGL;
-    const RGX = RG * S, RGY = RG * TS;
+    const twk = Math.floor(time * 3), rip = Math.floor(drift * 2), rip2 = Math.floor(drift * 5);
+    const RGX = RG * S, RGY = RG * TS, TOPB = TOPY * S;
     const groundVisible = camTopB - H < RGY + 2;
+    const hz = Math.round(H * 0.5 + (feetY + 34) * 0.2);                      // خط الأفق يهبط كلما صعدنا
+    const landOn = hz < H + 128;
+    const seaTop = Math.round(H * (1.12 - env.sea * (0.38 - 0.14 * sstep(STAGE_START[4], TOP_FLOOR, alt))));
+    const seaOn = env.sea > 0.01 && seaTop < H + 30;
+    const seaLit = 0.3 + 0.45 * env.moon;
+    const over = env.over, clearK = 1 - over, moonOn = env.moon > 0.4;
+    const starLim = 201 * env.star, bigStars = env.star > 0.35;
+    const aurOn = env.aur > 0.01;
+    const sunW = W * 0.6;
+    for (let sx = 0; sx < W; sx++) {
+      colIdx[sx] = mod(Math.floor(sx - skyOff), PER);
+      colCld[sx] = mod(Math.floor(sx - cloudOff), PER);
+      colCld2[sx] = mod(Math.floor(sx * 0.7 - cloudOff2), PER);
+      colSea[sx] = mod(Math.floor(sx - seaOff), PER);
+      const ds = (sx - sunX) / sunW;
+      colSun[sx] = 0.5 + 0.5 * Math.exp(-ds * ds);
+      if (aurOn) {
+        // ستائر الشفق: شدّتها وحافتها السفلى تتموّجان مع الاتجاه والزمن
+        const az = (sx - skyOff) / SKY_K;
+        const band = Math.max(0, Math.sin(az * 2 + drift * 0.17 + 1.3 * Math.sin(az * 3 - drift * 0.09)));
+        aurA[sx] = env.aur * 0.85 * band * Math.sqrt(band) * (0.55 + 0.45 * Math.sin(az * 37 + Math.sin(drift * 0.6 + az * 5) * 2));
+        aurBot[sx] = H * (0.4 + 0.07 * Math.sin(az * 4 + drift * 0.13) + 0.03 * Math.sin(az * 9 - drift * 0.21));
+      }
+    }
+    const glowY = seaOn ? seaTop : H;
+    for (let sy = 0; sy < H; sy++) {
+      rowGlow[sy] = landOn && sy < hz ? 0.34 * Math.exp(-(hz - sy) / 110) * env.moon : 0;
+      const d = (glowY - sy) / H;
+      rowDawn[sy] = env.dawn > 0 ? env.dawn * (d > 0 ? 0.95 * Math.exp(-d * 2.4) : 0.95) : 0;
+    }
     for (let sy = 0, i = 0; sy < H; sy++) {
       const Y = camTopB - sy;
-      const sr = mod(sy - starV, SKH) * PER, cr = mod(sy - cloudV, SKH) * PER;
+      const sr = mod(sy - starV, SKH) * PER, cr = mod(sy - cloudV, SKH) * PER, cr2 = mod(Math.floor(sy * 0.8) - cloudV2, SKH) * PER;
+      const land = landOn && sy >= hz - 128, sea = seaOn && sy >= seaTop - 30;
+      const rg = rowGlow[sy], rd = rowDawn[sy];
       for (let sx = 0; sx < W; sx++, i++) {
-        if (sx >= tx0 && sx <= tx1 && Y + colDep[sx - tx0] >= 0) continue;
+        if (sx >= tx0 && sx <= tx1) { const vi = Y + colDep[sx - tx0]; if (vi >= 0 && vi < TOPB) continue; }
         const X = sx - cx + 0.5;
         let v = -1;
         if (groundVisible && Y < RGY) {
@@ -1479,38 +2366,82 @@
               const ring = Math.floor(r / 11), segs = 6 + ring * 3;
               const fa = mod((Math.atan2(wxg, wdg) + cam) / TAU * segs + ring * 0.37, segs);
               const m = mod(r, 11) < 0.8 || fa - Math.floor(fa) < 0.05 ? 0.12 : 0.36 + hash(ring * 71 + Math.floor(fa) * 13) * 0.16;
-              const l = lightAt(wxg, 0, wdg) + 0.2;
+              const l = lightAt(wxg, 0, wdg) + 0.2 * MK + ambH;
               v = m * (l > 1 ? 1 : l);
             } else {
               const dd = (-ry - Y) / S, wd = RG * Math.sqrt(1 - e);
               const m = 0.22 + hash(Math.floor((X + dd * 3) / 7) * 13 + Math.floor(dd / 4) * 7) * 0.2 + hash(Math.floor(X / 2) * 31 + Math.floor(dd) * 17) * 0.1;
-              const l = lightAt(X / S, -dd, wd) + 0.14 * (1 - e);
-              v = m * Math.max(0, 1 - dd / 95) * (l > 1 ? 1 : l);
+              // جرف الصخرة: يلتقط ضوء القمر من جهته ويغيب في العتمة نزولاً
+              const l = lightAt(X / S, -dd, wd) + (0.1 + 0.34 * Math.max(0, Math.cos(Math.asin(X / RGX) + cam - MOON_A))) * MK + ambV;
+              v = m * Math.max(0, 1 - dd / 120) * (l > 1 ? 1 : l);
             }
           }
         }
-        if (v < 0) {
-          const dx = sx - moonX, dy = sy - moonY, dm = dx * dx + dy * dy;
-          if (dm < MR2) {
-            // قمر أحدب: بحار داكنة، حافة أدكن، وحدّ ظل
-            const nx = dx / MR, ny = dy / MR;
-            const maria = vnoise(nx * 2.3 + 7.3, ny * 2.3 + 3.1, 64, 64) * 0.6 + vnoise(nx * 5.1 + 1.7, ny * 5.1 + 9.2, 64, 64) * 0.4;
-            const term = nx + Math.sqrt(Math.max(0, 1 - ny * ny)) * 0.72;
-            v = term < 0 ? 0.09 : (maria > 0.57 ? 0.58 : maria > 0.48 ? 0.82 : 1) * (0.8 + 0.2 * Math.sqrt(1 - dm / MR2)) * Math.min(1, term * 5 + 0.25);
+        if (v < 0 && land) {
+          const idx = colIdx[sx];
+          if (sy >= hz) {
+            // بحيرة: انعكاس الجبال، تموّجات، ودرب ضوء القمر
+            const d = sy - hz;
+            v = 0.03 + 0.1 * Math.exp(-d / 30) * env.moon;
+            if (d < mtFar[idx] * 0.55) v *= 0.35;
+            else if ((d + (idx >> 2) + rip) % 9 === 0 && hash(idx * 7 + d) > 0.45) v = 0.2;
+            const gdx = sx - moonX, gw = 2.5 + d * 0.32;
+            if (moonOn && gdx > -gw && gdx < gw && hash((d >> 1) * 131 + ((sx + rip2 * (1 + (d >> 3))) >> 1)) > 0.42 + 0.3 * Math.abs(gdx) / gw) v = 0.95;
+            if (d < 4) v = Math.max(v, 0.22 - d * 0.045);
           } else {
-            const st = starTex[sr + mod(Math.floor(sx - skyOff), PER)];
-            v = cloudTex[cr + mod(Math.floor(sx - cloudOff), PER)] / 255;
-            if (v > 0 && dm < MGL2) v *= 1 + (1 - Math.sqrt(dm) / MGL) * 1.5;       // الغيم قرب القمر يضيء
-            if (st && v < 0.1) v = st === 255 || reduceMotion || (st + twk) % 7 ? 1 : 0;
-            if (dm < HALO2) { const hv = 0.34 * (1 - (Math.sqrt(dm) - MR) / 18); if (hv > v) v = hv; }
+            const upv = hz - sy, mf = mtFar[idx];
+            if (upv <= mtNear[idx]) v = 0;
+            else if (upv <= mf) v = mf > 46 && upv > mf - (mf - 38) * 0.45 && (mtLit[idx] || hash(idx * 3 + upv) > 0.55) ? 0.55 * env.moon + 0.06 : 0.035;
           }
+        }
+        if (v < 0 && sea) {
+          // بحر غيوم تحتنا: قمم مضيئة ووديان أعتم
+          const si = colSea[sx], top = seaTop - seaH[si];
+          if (sy >= top) {
+            const d = sy - top;
+            v = (0.3 + 0.42 * cloudTex[((d * 2 + seaRow) & 511) * PER + si] * (1 / 84) + (d < 3 ? 0.3 : 0)) * seaLit + env.dawn * 0.45 * colSun[sx] + flash * 0.3;
+            if (v > 1) v = 1;
+          }
+        }
+        if (v < 0) {
+          let c = 0;
+          if (clearK > 0) {
+            const dx = sx - moonX, dy = sy - moonY, dm = dx * dx + dy * dy;
+            if (dm < MR2) {
+              // قمر أحدب: بحار داكنة، حافة أدكن، وحدّ ظل
+              const nx = dx / MR, ny = dy / MR;
+              const maria = vnoise(nx * 2.3 + 7.3, ny * 2.3 + 3.1, 64, 64) * 0.6 + vnoise(nx * 5.1 + 1.7, ny * 5.1 + 9.2, 64, 64) * 0.4;
+              const term = nx + Math.sqrt(Math.max(0, 1 - ny * ny)) * 0.72;
+              c = term < 0 ? 0.09 : (maria > 0.57 ? 0.58 : maria > 0.48 ? 0.82 : 1) * (0.8 + 0.2 * Math.sqrt(1 - dm / MR2)) * Math.min(1, term * 5 + 0.25);
+            } else {
+              c = cloudTex[cr + colCld[sx]] * (1 / 255);
+              if (c > 0 && dm < MGL2) c *= 1 + (1 - Math.sqrt(dm) / MGL) * 1.5;
+              c += rg + rd * colSun[sx];
+              if (aurOn && sy < aurBot[sx]) c += aurA[sx] * aurF[(aurBot[sx] - sy) | 0];
+              const stv = starTex[sr + colIdx[sx]];
+              if (stv && c < 0.12 && (stv === 255 ? bigStars : stv <= starLim)) c = stv === 255 || reduceMotion || (stv + twk) % 7 ? 1 : 0;
+              if (dm < HALO2) { const hv = 0.34 * (1 - (Math.sqrt(dm) - MR) / 18); if (hv > c) c = hv; }
+            }
+          }
+          if (over > 0) {
+            // غيوم العاصفة تغطي السماء ويضيئها البرق من داخلها
+            const oc = 0.02 + cloudTex[cr2 + colCld2[sx]] * (0.3 / 84) + flash * (0.25 + cloudTex[cr + colCld[sx]] * (1 / 120));
+            c = c * clearK + oc * over;
+          }
+          v = c > 1 ? 1 : c;
         }
         buf[i] = v;
       }
     }
+    if (bolt) {
+      const P = bolt.pts, B = bolt.br;
+      for (let k = 2; k < P.length; k += 2) { line(bolt.x + P[k - 2], P[k - 1], bolt.x + P[k], P[k + 1], 1); line(bolt.x + P[k - 2] + 1, P[k - 1], bolt.x + P[k] + 1, P[k + 1], 1); }
+      for (let k = 2; k < B.length; k += 2) line(bolt.x + B[k - 2], B[k - 1], bolt.x + B[k], B[k + 1], 1);
+    }
+    drawWeather(false);
 
     // ---- 2: ما يقع خلف البرج ----
-    if (!reduceMotion && mode === 'play' && time > nextBat) {
+    if (!reduceMotion && mode === 'play' && time > nextBat && env.rain < 0.3 && env.snow < 0.3) {
       const dir = Math.random() < 0.5 ? 1 : -1;
       bats.push({ x: dir > 0 ? -12 : W + 12, Y: camTopB - H * (0.1 + Math.random() * 0.5), vx: dir * (110 + Math.random() * 60), ph: Math.random() * 6 });
       nextBat = time + 4 + Math.random() * 6;
@@ -1522,8 +2453,8 @@
       sprite(BAT[Math.floor(time * 9 + b.ph) % 2], b.x, camTopB - b.Y, false, 0.9);
     }
     const ghosts = [];
-    for (let n = Math.max(1, Math.floor(botW / REV) - 1); n * REV < topW + 20; n++) {
-      if (hash(n * 104729 + 5) >= 0.45) continue;
+    for (let n = Math.max(1, Math.floor(botW / REV) - 1); n * REV < topW + 20 && n < TOP_FLOOR - 1; n++) {
+      if (hash(n * 104729 + 5) >= STAGES[stageOfFloor(n)].ghost) continue;
       const a = hash(n * 311 + 9) * TAU + (reduceMotion ? 0 : time * 0.12 * (n & 1 ? 1 : -1));
       const y = n * REV + 30 + hash(n * 17) * 40 + (reduceMotion ? 0 : Math.sin(time * 1.6 + n) * 3);
       const rel = a - cam, gx = (RS + 24) * Math.sin(rel), gd = (RS + 24) * Math.cos(rel);
@@ -1534,60 +2465,80 @@
     for (const g of ghosts) if (g.back) sprite(GHOST, g.sx, g.sy, g.flip, g.al);
 
     stepList.length = 0;
-    const iMin = Math.max(1, Math.floor((botW - RS * TILT * 2) / SH) - 3), iMax = Math.ceil((topW + RS * TILT) / SH) + 2;
+    const iMin = Math.max(1, Math.floor((botW - RS * TILT * 2) / SH) - 3), iMax = Math.min(I_END, Math.ceil((topW + RS * TILT) / SH) + 2);
     for (let i = iMin; i <= iMax; i++) stepList.push(i);
     stepList.sort((a, b) => Math.cos(a * DA - cam) - Math.cos(b * DA - cam));
     let si = 0;
     for (; si < stepList.length && Math.cos(stepList[si] * DA - cam) < 0; si++) { drawCorbel(stepList[si]); drawStep(stepList[si]); }
-
-    // رسم البراميل عندما تكون خلف البرج (أعلى المنحنى الخلفي للدرج)
     for (const o of things) {
-      if (o.kind !== 'barrel') continue;
+      if (o.kind !== 'barrel' && o.kind !== 'raven') continue;
       const a = o.q * DA;
-      if (Math.cos(a - cam) < 0) {
-        drawBarrel3D(VX(RM, a), VY(RM, a, o.y), o.rot, o.bounceH || 0, 0.85);
-      }
+      if (Math.cos(a - cam) >= 0) continue;
+      if (o.kind === 'barrel') drawBarrel3D(VX(RM, a), VY(RM, a, o.y), o.rot, o.bounceH || 0, 0.85);
+      else spriteInk(RAVEN[Math.floor(time * 8 + o.ph) % 2], VX(RM, a), VY(RM, a, o.y), false);
     }
+    if (topW > TOPY - 40) { drawRoof(); drawBeacon(time); drawBeams(time); }
 
-    // ---- 3: سطح البرج ----
+    // ---- 3: سطح البرج، بنقش بارز يتبع اتجاه الضوء ----
     const ubase = mod(cam, TAU) / TAU * CU;
+    const BK = 2.3 / GS, TOPVI = (TOPY + MERLON) * S;
+    const pulse = env.rune > 0.05 && !reduceMotion ? 0.82 + 0.18 * Math.sin(time * 1.9) : 1;
+    const boltSide = bolt ? bolt.side : 1;
     for (let sx = tx0; sx <= tx1; sx++) {
       const k = sx - tx0;
       const u = mod(Math.floor(ubase + colU[k]), CU);
-      const cosp = colCos[k], limbS = 0.25 + 0.75 * cosp;
-      const mc = Math.max(0, Math.cos(cam + colPhi[k] - MOON_A));
-      const ml = mc * 0.34 + mc * (1 - cosp) * (1 - cosp) * 0.6;
-      const xw = colXw[k], dw = colDw[k];
+      const cosp = colCos[k], limbS = 0.25 + 0.75 * cosp, sinp = Math.sin(colPhi[k]);
+      const A = cam + colPhi[k];
+      const mc = Math.max(0, Math.cos(A - MOON_A)), sc = Math.max(0, Math.cos(A - SUN_A));
+      const mlMoon = (mc * 0.34 + mc * (1 - cosp) * (1 - cosp) * 0.6) * MK;
+      const mlSun = env.dawn * (0.12 + sc * 0.75);
+      const mlFlash = flash * (0.3 + 0.6 * clamp01(0.5 + boltSide * sinp * 0.9));
+      const ml = mlMoon + mlSun + mlFlash;
+      // اتجاه الضوء العام على سطح الجدار: يمين/يسار بحسب الجهة، ومن الأعلى
+      const mbx = ml > 0.001 ? (mlMoon * Math.sin(MOON_A - A) + mlSun * Math.sin(SUN_A - A) + mlFlash * boltSide * 0.7) / ml * 0.8 : 0;
+      const xw = colXw[k], dw = colDw[k], glowS = (0.45 + 0.55 * cosp) * pulse;
       let nc = 0;
       for (let q = 0; q < nl; q += 5) {
-        const dx = xw - lights[q], dd = dw - lights[q + 2], h2 = dx * dx + dd * dd;
-        if (h2 < lights[q + 4]) { cl[nc++] = h2; cl[nc++] = lights[q + 1]; cl[nc++] = lights[q + 3]; cl[nc++] = lights[q + 4]; }
+        const dx = lights[q] - xw, dd = dw - lights[q + 2], h2 = dx * dx + dd * dd;
+        if (h2 < lights[q + 4]) { cl[nc++] = h2; cl[nc++] = lights[q + 1]; cl[nc++] = lights[q + 3]; cl[nc++] = lights[q + 4]; cl[nc++] = dx; }
       }
-      let vi = camTopB + colDep[k];
-      let cy = Math.floor(vi / CH), chunk = getChunk(cy), rb = (vi - cy * CH) * CU + u;
-      for (let sy = 0, bi = sx; sy < H; sy++, bi += W, vi--, rb -= CU) {
+      let vi = camTopB + colDep[k], sy = 0;
+      if (vi >= TOPVI) { sy = vi - TOPVI + 1; vi = TOPVI - 1; }
+      if (sy >= H) continue;
+      let cy = Math.floor(vi / CH), chunk = getChunk(cy), cm = chunk.m, cgx = chunk.gx, cgy = chunk.gy, rb = (vi - cy * CH) * CU + u;
+      for (let bi = sy * W + sx; sy < H; sy++, bi += W, vi--, rb -= CU) {
         if (vi < 0) break;
-        if (rb < 0) { cy--; chunk = getChunk(cy); rb += CH * CU; }
-        const m = chunk[rb];
+        if (rb < 0) { cy--; chunk = getChunk(cy); cm = chunk.m; cgx = chunk.gx; cgy = chunk.gy; rb += CH * CU; }
+        const m = cm[rb];
         if (m > 0) {
-          const wy = vi / S;
-          let l = 0;
-          for (let c = 0; c < nc; c += 4) {
-            const dy = wy - cl[c + 1], d2 = cl[c] + dy * dy;
-            if (d2 < cl[c + 3]) { const ll = 1 - Math.sqrt(d2) / cl[c + 2]; if (ll > l) l = ll; }
+          if (m > 5) continue;                       // فراغ بين الشرفات
+          const wy = vi / S, gx = cgx[rb], gy = cgy[rb];
+          let l = 0, bx = 0, by = 0;
+          for (let c = 0; c < nc; c += 5) {
+            const dy = cl[c + 1] - wy, d2 = cl[c] + dy * dy;
+            if (d2 < cl[c + 3]) {
+              const d = Math.sqrt(d2), ll = 1 - d / cl[c + 2];
+              if (ll > l) { l = ll; const inv = 1 / (d + 4); bx = cl[c + 4] * inv; by = dy * inv; }
+            }
           }
-          if (l > 0) { l = l * l * (3 - 2 * l) * 1.9; if (l > 1) l = 1; }
-          l = l * limbS + ml;
-          buf[bi] = m * (l > 1 ? 1 : l);
-        } else buf[bi] = m < 0 ? -m * (0.45 + 0.55 * cosp) : 0;
+          if (l > 0) {
+            l = l * l * (3 - 2 * l) * 1.9; if (l > 1) l = 1;
+            const bump = 1 - (gx * bx + gy * by) * BK;
+            l *= limbS * (bump < 0.3 ? 0.3 : bump > 1.9 ? 1.9 : bump);
+          }
+          if (ml > 0) { const ab = 1 - (gx * mbx + gy * 0.45) * BK; l += ml * (ab < 0.3 ? 0.3 : ab > 1.9 ? 1.9 : ab); }
+          const v = m * l;
+          buf[bi] = v > 1 ? 1 : v;
+        } else buf[bi] = m < 0 ? -m * glowS : 0;
       }
     }
 
     // ---- 4: ما يقع أمام البرج ----
     for (const sc of sconces) {
       const bx = VX(RW + 3, sc.a), by = VY(RW + 3, sc.a, sc.y);
-      glow(bx, by - 16, 20, 0.6);
       sprite(SCONCE, bx, by, false, 1);
+      if (env.rain > 0.5 && hash(Math.floor(time * 9) * 31 + sc.y) < 0.22) continue;     // الريح تكاد تطفئه
+      glow(bx, by - 16, 20, 0.6);
       sprite(FLAME[reduceMotion ? 0 : Math.floor(time * 8 + sc.y) % 2], bx, by - 8, false, 1);
     }
     for (; si < stepList.length; si++) { drawCorbel(stepList[si]); drawStep(stepList[si]); }
@@ -1603,8 +2554,8 @@
       }
     }
 
-    // غبار يسبح في الضوء
-    if (!reduceMotion) {
+    // غبار يسبح في ضوء المشعل
+    if (!reduceMotion && env.rain < 0.5) {
       while (motes.length < 26) motes.push({ x: (Math.random() * 2 - 1) * 150, y: (Math.random() * 2 - 1) * 150, ph: Math.random() * 6 });
       for (const d of motes) {
         d.y -= 6 * dt; d.x += (Math.sin(time * 0.7 + d.ph) * 8 - spd * 6) * dt;
@@ -1614,40 +2565,70 @@
       }
     }
 
-    // النجوم والشعلات على الدرج
+    // المسافر: يُرسم أولاً في صورته الخاصة، ثم ظلّه على الجدار، ثم هو
+    const torchLit = mode !== 'dead';
+    const blink = time < hurtUntil && Math.floor(time * 12) % 2;
+    const ksx = cx + shx;
+    drawKnight(p, spd, torchLit, time, capeBlow, duckPose, jumpY, raise);
+    grabKnight();
+    if (torchLit) {
+      const lx = ksx + 17, ly = feetSy - 66 + duckPose * 16 - raise * 9, fk = flick * 0.012;
+      castShadow(ksx, feetSy, lx, ly, 1.62 + fk, 1.15, 0.74);
+      castShadow(ksx, feetSy, lx, ly, 1.42 + fk, 1.1, 0.62);
+    }
+
+    // النجوم والشعلات على الدرج، وما يسقط من فوق
     const tw = Math.floor(time * 4) % 2;
     for (const o of things) {
-      if (o.kind === 'barrel') continue;
+      if (o.kind === 'barrel' || o.kind === 'raven') continue;
       const a = o.q * DA;
       if (Math.cos(a - cam) < -0.1) continue;
       const osx = VX(RM, a);
-      const bob = o.rest && !reduceMotion ? Math.sin(time * 3) * 1.5 : 0;
-      sprite(o.kind === 'ember' ? FLAME[tw] : STAR[tw], osx, VY(RM, a, o.y + bob), false, 1);
+      if (o.kind === 'fall') {
+        // ظل يكبر على الدرجة كلما اقترب، وعلامة تومض فوقها
+        const near = clamp01(1 - (o.y - o.ty) / 150);
+        groundShadow(osx, VY(RM, a, o.ty) - 1, 5 + near * 8, 2 + near * 2.5, 0.75 - near * 0.5);
+        if (Math.floor(time * 7) % 2) sprite(MARK, osx, VY(RM, a, o.ty + 6), false, 1);
+        if (o.wait <= 0) sprite(o.ice ? ICICLE : ROCK[o.v], osx, VY(RM, a, o.y), false, 1);
+      } else {
+        const bob = o.rest && !reduceMotion ? Math.sin(time * 3) * 1.5 : 0;
+        sprite(o.kind === 'ember' ? FLAME[tw] : STAR[tw], osx, VY(RM, a, o.y + bob), false, 1);
+      }
     }
 
-    // الشخصية
-    const blink = time < hurtUntil && Math.floor(time * 12) % 2;
     if (!blink) {
-      if (mode !== 'dead') glow(cx + shx + 17, feetSy - 66 + duckPose * 16, 30 + flick, 0.7);
-      drawKnight(p, spd, mode !== 'dead', time, capeBlow, duckPose, jumpY);
-      blitKnight(cx + shx, feetSy);
-      if (mode !== 'dead' && !reduceMotion && Math.random() < dt * 10) {
-        bits.push({ x: cx + 17 + Math.random() * 6 - 3, Y: feetY + Math.round(jumpY * S) + 72 - duckPose * 16, vx: Math.random() * 16 - 8 - spd * 8, vy: 28 + Math.random() * 16, g: 0, life: 0.6 + Math.random() * 0.7, big: 0 });
+      if (torchLit) glow(ksx + 17, feetSy - 66 + duckPose * 16 - raise * 9, 30 + flick, 0.7);
+      blitKnight(ksx, feetSy);
+      if (torchLit && !reduceMotion && Math.random() < dt * 10) {
+        bits.push({ x: ksx + 17 + Math.random() * 6 - 3, Y: feetY + Math.round(jumpY * S) + 72 - duckPose * 16, vx: Math.random() * 16 - 8 - spd * 8, vy: 28 + Math.random() * 16, g: 0, life: 0.6 + Math.random() * 0.7, big: 0 });
       }
     }
-
-    // رسم البراميل المتدحرجة في الواجهة الأمامية (لكي تمر بوضوح من فوق الشخصية المنحنية)
-    for (const o of things) {
-      if (o.kind !== 'barrel') continue;
-      const a = o.q * DA;
-      if (Math.cos(a - cam) >= 0) {
-        const osx = VX(RM, a);
-        // علامة تنبيه صغيرة على الدرج قبل وصول البرميل
-        if (o.q > p + 0.5 && o.q < p + 6 && Math.floor(time * 8) % 2) {
-          sprite(MARK, VX(RM, (p + 1) * DA), VY(RM, (p + 1) * DA, (p + 1) * SH + 28), false, 1);
-        }
-        drawBarrel3D(osx, VY(RM, a, o.y), o.rot, o.bounceH || 0, 1);
+    // نَفَس يتكاثف في البرد
+    if (env.snow > 0.5 && mode === 'play' && !reduceMotion) {
+      breathT -= dt;
+      if (breathT <= 0) {
+        breathT = 2.2;
+        for (let k = 0; k < 6; k++) bits.push({ x: ksx + 10 + k * 1.4, Y: feetY + Math.round(jumpY * S) + 56 - duckPose * 14 + Math.random() * 3, vx: 12 + Math.random() * 12, vy: 5 + Math.random() * 9, g: -8, life: 0.45 + Math.random() * 0.5, big: 0, v: 0.6 });
       }
+    }
+    // شرارة تطير من المشعل إلى المنارة
+    if (mode === 'summit' && endT > 0.5 && endT < 1.5) {
+      const f = endT - 0.5, x0 = ksx + 17, y0 = feetSy - 76, y1 = camTopB - TOPY * S - BEACON_H - 16;
+      const px = Math.round(x0 + (ksx - x0) * f), py = Math.round(y0 + (y1 - y0) * f - Math.sin(Math.PI * f) * 46);
+      glow(px, py, 9, 0.85);
+      for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) put(px + ox, py + oy, 1);
+      if (!reduceMotion) bits.push({ x: px, Y: camTopB - py, vx: Math.random() * 20 - 10, vy: Math.random() * 20 - 4, g: 60, life: 0.4, big: 0 });
+    }
+
+    // البراميل والغربان أمام المسافر، تمرّ من فوقه وهو منحنٍ
+    for (const o of things) {
+      if (o.kind !== 'barrel' && o.kind !== 'raven') continue;
+      const a = o.q * DA;
+      if (Math.cos(a - cam) < 0) continue;
+      const osx = VX(RM, a);
+      if (o.q > p + 0.5 && o.q < p + 6 && Math.floor(time * 8) % 2) sprite(MARK, VX(RM, (p + 1) * DA), VY(RM, (p + 1) * DA, (p + 1) * SH + 30), false, 1);
+      if (o.kind === 'barrel') drawBarrel3D(osx, VY(RM, a, o.y), o.rot, o.bounceH || 0, 1);
+      else spriteInk(RAVEN[Math.floor(time * 8 + o.ph) % 2], osx, VY(RM, a, o.y), false);
     }
 
     for (const g of ghosts) if (!g.back) sprite(GHOST, g.sx, g.sy, g.flip, g.al);
@@ -1657,36 +2638,54 @@
       const b = bits[i];
       b.life -= dt; b.vy -= b.g * dt; b.x += b.vx * dt; b.Y += b.vy * dt;
       if (b.life <= 0) { bits.splice(i, 1); continue; }
-      const X = Math.round(b.x), Yy = Math.round(camTopB - b.Y);
-      put(X, Yy, 1);
+      const X = Math.round(b.x), Yy = Math.round(camTopB - b.Y), bv = b.v || 1;
+      put(X, Yy, bv);
       if (b.big) { put(X + 1, Yy, 1); put(X, Yy + 1, 1); put(X + 1, Yy + 1, 1); }
     }
+    drawWeather(true);
 
-    // ضباب خفيف يتصاعد من الأسفل كلما ارتفع البرج
-    const mist = Math.max(0, Math.min(1, (p - 14) / 26));
-    if (mist > 0) {
-      const y0 = Math.floor(H * 0.78), mOff = Math.floor(skyOff * 0.4 + (reduceMotion ? 0 : time * 11));
+    // ضباب يتصاعد من الأسفل، وعتمة العاصفة تملأ الجو
+    if (env.mist > 0.01) {
+      const y0 = Math.floor(H * 0.78), mOff = Math.floor(skyOff * 0.4 + drift * 11);
       for (let sy = y0; sy < H; sy++) {
-        const k = (sy - y0) / (H - y0), row = mod(sy + Math.floor(camTopB * 0.3), SKH) * PER;
+        const k = (sy - y0) / (H - y0), row = mod(sy + Math.floor(camTopB * 0.3), SKH) * PER, a = env.mist * k * k;
         for (let sx = 0, i = sy * W; sx < W; sx++, i++) {
-          const hz = mist * k * k * (0.14 + cloudTex[row + mod(sx + mOff, PER)] / 84 * 0.36);
-          if (hz > buf[i]) buf[i] = hz;
+          const hzv = a * (0.07 + cloudTex[row + mod(sx + mOff, PER)] * (0.34 / 84));
+          if (hzv > buf[i]) buf[i] = hzv;
+        }
+      }
+    }
+    if (over > 0.05) {
+      const mOff = Math.floor(skyOff * 0.5 + drift * 22);
+      for (let sy = 0; sy < H; sy++) {
+        const row = mod(sy + Math.floor(camTopB * 0.35), SKH) * PER, e = 2 * sy / H - 1, a = over * (0.35 + 0.65 * e * e);
+        for (let sx = 0, i = sy * W; sx < W; sx++, i++) {
+          const hzv = a * cloudTex[row + mod(sx + mOff, PER)] * (0.15 / 84) + flash * 0.05;
+          if (hzv > buf[i]) buf[i] = hzv;
         }
       }
     }
 
     // ---- 5: التحويل إلى لونين بالتنقيط ----
-    const data = img.data;
-    for (let sy = 0, i = 0, o = 0; sy < H; sy++) {
-      const by = ((camTopB - sy) & 3) << 2;
-      for (let sx = 0; sx < W; sx++, i++, o += 4) {
-        const on = buf[i] > BAYER[by | (sx & 3)];
-        data[o] = on ? INK[0] : 0; data[o + 1] = on ? INK[1] : 0; data[o + 2] = on ? INK[2] : 0; data[o + 3] = 255;
-      }
+    // حبيبات الجدار تثبت عليه وهو يتحرك، وحبيبات السماء تتحرك مع النجوم
+    const fm = fadeT * fadeT * (3 - 2 * fadeT);
+    const xa = tx0, xb = tx1 + 1;
+    for (let sy = 0, i = 0; sy < H; sy++) {
+      const tw2 = ((camTopB - sy) & TMASK) << 6, tsk = ((sy - starV) & TMASK) << 6;
+      let sx = 0;
+      for (; sx < xa; sx++, i++) { const t = buf[i] * vig[i] * fm; data32[i] = t * t * (1.7 - 0.7 * t) > THR[tsk | (sx & TMASK)] ? INK32 : VOID32; }
+      for (; sx < xb; sx++, i++) { const t = buf[i] * vig[i] * fm; data32[i] = t * t * (1.7 - 0.7 * t) > THR[tw2 | (sx & TMASK)] ? INK32 : VOID32; }
+      for (; sx < W; sx++, i++) { const t = buf[i] * vig[i] * fm; data32[i] = t * t * (1.7 - 0.7 * t) > THR[tsk | (sx & TMASK)] ? INK32 : VOID32; }
     }
     ctx.putImageData(img, 0, 0);
     requestAnimationFrame(frame);
   }
+
+  buildChips(); updateRecord(); drawLives();
+  starsEl.textContent = '✦ ' + num(0);
+  selectStage(Math.min(unlocked, STAGES.length - 1));
+  fadeT = 1;
+  
   requestAnimationFrame(frame);
 })();
 </script>
